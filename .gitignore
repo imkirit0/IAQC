@@ -9,3 +9,6 @@ __pycache__/
 
 # internal documents
 *.docx
+
+# Vercel env import file (holds secrets)
+*.env
