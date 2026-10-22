@@ -1,0 +1,942 @@
+[
+ {
+  "aso": "Trivandrum",
+  "centre": "Attingal"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Kallambalam"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Kattakada"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Kazhakootum"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Kilimanoor"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Malayinkeezhu"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Manacaud"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Nalanchira"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Nedumangadu"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Neyyatinkara"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Palayam"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Palode"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Parasala"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Poovar"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Pothencode"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Pravachambalam"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Sreekaryam"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Thirumala"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Varkala"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Vellanadu"
+ },
+ {
+  "aso": "Trivandrum",
+  "centre": "Venjaramoodu"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Anchal"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Ayoor"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Chavara"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Chinnakkada"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Kannanalloor"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Karikode"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Karunagappally"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Kottarakkara"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Kottiyam"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Kundara"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Nilamel"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Parippally"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Pathanapuram"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Punalur"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Sasthamkotta"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Sn College Jn"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Vellayittambalam"
+ },
+ {
+  "aso": "Kollam",
+  "centre": "Puthoor"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Adoor"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Chittar"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Kadampanad"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Konni"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Kozhenchery"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Mallapally"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Pandalam"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Pathanamthitta"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Ranni"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Thiruvalla"
+ },
+ {
+  "aso": "Pathanamthitta",
+  "centre": "Vadasserikkara"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Adimali"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Cheruthoni"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Kattappana"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Kumily"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Murickassery"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Nedumkandam"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Rajakumary"
+ },
+ {
+  "aso": "Idukki",
+  "centre": "Thodupuzha"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Changanassery"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Pala"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Pampady"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Vaikom"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Kanjirappally"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Erattupetta"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Ayarkunnam"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Baker Jn"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Kaduthuruthy"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Karukachal"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Kuravilangad"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Ettumanoor"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Erumely"
+ },
+ {
+  "aso": "Kottayam",
+  "centre": "Mundakayam"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Alappuzha City"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Cherthala"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Chengannur"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Edathwa"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Haripad"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Mannar"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Mavelikkara"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Kayamkulam"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Charumoodu"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Ambalappuzha"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Eramalloor"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Mannanchery"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Nedumudy"
+ },
+ {
+  "aso": "Alappuzha",
+  "centre": "Mullakkal"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Aluva"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Angamaly"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Ernakulam South"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Fort Kochi"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Kacheripady"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Kalamassery"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Kolenchery"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Koothattukulam"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Kothamangalam"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Muvattupuzha"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Narakkal"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "North Paravoor"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Palarivattom"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Palluruthy"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Perumbavoor"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Piravom"
+ },
+ {
+  "aso": "Ernakulam",
+  "centre": "Thrippunithura"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Althara"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Amballur"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Chalakkudi"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Chavakkad"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Chelakkara"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Erumapetty"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Guruvayoor"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Irinjalakuda"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Kechery"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Kodakara"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Kodungallur"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Kunnamkulam"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Mala"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Mundur"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Nattika"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Pavaratty"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Perinjanam"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Thrissur Sakthan"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Thiruvilwamala"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Thrissur Round"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Vadakkekad"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Vadanappalli"
+ },
+ {
+  "aso": "Thrissur",
+  "centre": "Wadakkanchery"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Agali"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Alathur"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Cherpulassery"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Chittur"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Kanjikode"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Koduvayur"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Kollengode"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Kongad"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Koottanad"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Koppam"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Mannarkkad"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Nenmara"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Olavakkode"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Ottappalam"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Padinjarangadi"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Palakkad"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Pattambi"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Shoranur"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Sreekrishnapuram"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Vadakkanchery"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Meenakshipuram"
+ },
+ {
+  "aso": "Palakkad",
+  "centre": "Kozhinjampara"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Alanallur"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Alathiyoor"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Areacode"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Changaramkulam"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Chelari"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Chemmad"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Edakkara"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Edappal"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Edavannappara"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Karinkallathani"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Karuvarakundu"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Kondotty"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Kottakkal"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Kuttippuram"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Malappuram"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Manjeri"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Melattur"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Nilambur"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Pandikkad"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Parappanangadi"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Perinthalmanna"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Ponnani"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Pulamanthole"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Puthanathani"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Tanalur"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Tanur"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Tirur"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Vailathoor"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Valanchery"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Vengara"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Wandoor"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Kunnumpuram"
+ },
+ {
+  "aso": "Malappuram",
+  "centre": "Gce Perinthalmanna"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Balussery"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Calicut Main Centre"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Calicut City Centre"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Feroke"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Kakkattil"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Kakkodi"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Kaithapoyil"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Koduvally"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Koyilandy"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Kunnamangalam"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Kuttiadi"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Mavoor"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Calicut Medical College"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Mukkam"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Nadapuram"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Naduvannur"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Narikkuni"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Pantheerankavu"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Payyoli"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Perambra"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Poonoor"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Ramanattukara"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Thamarassery"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Thiruvambady"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Calicut Town Centre"
+ },
+ {
+  "aso": "Calicut",
+  "centre": "Vatakara"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Gudalur"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Kalpetta"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Mananthavady"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Meenangadi"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Meppady"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Padinjarathara"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Panamaram"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Pulpally"
+ },
+ {
+  "aso": "Wayanad",
+  "centre": "Sulthan Bathery"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Alakode"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Badiadka"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Cherupuzha"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Iritty"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Kanhangad"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Caltex Junction"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Kasaragod"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Mattannur"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Nileshwar"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Panoor"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Payyannur"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Sreekandapuram"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Thalassery"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Thaliparamba"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Uppala"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Vellarikkundu"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Kuthuparamba"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Mahe"
+ },
+ {
+  "aso": "Kannur & Kasaragode",
+  "centre": "Peravoor"
+ }
+]

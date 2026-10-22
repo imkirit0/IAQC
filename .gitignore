@@ -1,0 +1,11 @@
+# secrets and local data
+.secret_key
+rds.db
+.env*
+!.env.example
+
+# python
+__pycache__/
+
+# internal documents
+*.docx

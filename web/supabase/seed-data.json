@@ -1,0 +1,1391 @@
+{
+ "checklist": [
+  {
+   "section": "Operations and Documentation",
+   "criteria": [
+    {
+     "key": "ops.admin",
+     "text": "Centre maintains the official Admin Book.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.ledger",
+     "text": "Centre maintains an updated Student Ledger.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.daybook",
+     "text": "Centre maintains a Day Book.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.inout",
+     "text": "Centre maintains a Student In-and-Out Register.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.admission",
+     "text": "Student admission details are properly recorded in the official management system.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "ops.fees",
+     "text": "Student fee collections are accurately recorded in the system.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    },
+    {
+     "key": "ops.receipts",
+     "text": "Fee receipts are issued to students.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "ops.records",
+     "text": "Centre records are updated and available for verification.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Financial Transparency",
+   "criteria": [
+    {
+     "key": "fin.structure",
+     "text": "Student fees correspond with the approved fee structure.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "fin.extra",
+     "text": "No unauthorised additional charges are collected.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    },
+    {
+     "key": "fin.match",
+     "text": "Collection records match available student fee records.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    },
+    {
+     "key": "fin.pending",
+     "text": "Pending instalments and outstanding balances are properly documented.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "fin.discrep",
+     "text": "Financial discrepancies are reported and explained.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 0
+    },
+    {
+     "key": "fin.royalty",
+     "text": "Applicable royalty and other payments are properly documented.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Academic Quality",
+   "criteria": [
+    {
+     "key": "acad.schedule",
+     "text": "Classes are conducted according to the approved academic schedule.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.trainers",
+     "text": "Qualified or authorised trainers are assigned.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.attendance",
+     "text": "Student attendance records are maintained.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.materials",
+     "text": "Academic materials are provided according to the applicable policy.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.exams",
+     "text": "Student assessments and examination procedures follow approved standards.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.certs",
+     "text": "Student certificates are issued only through authorised procedures.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    }
+   ]
+  },
+  {
+   "section": "Marketing and Admissions",
+   "criteria": [
+    {
+     "key": "mkt.brand",
+     "text": "Marketing materials follow approved brand guidelines.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.logos",
+     "text": "Only authorised logos, advertisements, and promotional claims are used.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.claims",
+     "text": "Course details and certifications are accurately represented.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.admissions",
+     "text": "Admissions are recorded in the official system.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "mkt.commit",
+     "text": "Student fee commitments are clearly communicated.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.discounts",
+     "text": "Unauthorised discounts and promotional offers are not provided.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Brand and Policy Compliance",
+   "criteria": [
+    {
+     "key": "brand.agreement",
+     "text": "Centre follows the franchise agreement and applicable organisational policies.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "brand.premises",
+     "text": "Centre premises and signage meet approved brand standards.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "brand.identity",
+     "text": "Official identity and branding are used correctly.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "brand.unauth",
+     "text": "No unauthorised courses or services are promoted.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "brand.comm",
+     "text": "Centre follows approved communication and reporting procedures.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Student Satisfaction and Service Quality",
+   "criteria": [
+    {
+     "key": "stu.feedback",
+     "text": "Student feedback is collected where appropriate.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.complaints",
+     "text": "Student complaints are recorded and addressed.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.info",
+     "text": "Students receive accurate course and fee information.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.promised",
+     "text": "Students report that classes are conducted as promised.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.concerns",
+     "text": "Student concerns about fees, academics, or services are documented.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  }
+ ],
+ "users": [
+  {
+   "username": "iaqc",
+   "name": "IAQC Coordinator (Demo)",
+   "role": "iaqc",
+   "password": "Iaqc@Demo2026",
+   "area": "Head Office"
+  },
+  {
+   "username": "cmd",
+   "name": "CMD (Demo)",
+   "role": "cmd",
+   "password": "Cmd@Demo2026",
+   "area": "Head Office"
+  },
+  {
+   "username": "arjun.ac",
+   "name": "Arjun Menon",
+   "role": "ac",
+   "password": "Arjun@Demo2026",
+   "area": "Thiruvananthapuram, Kollam"
+  },
+  {
+   "username": "priya.ac",
+   "name": "Priya Nair",
+   "role": "ac",
+   "password": "Priya@Demo2026",
+   "area": "Ernakulam, Thrissur"
+  },
+  {
+   "username": "rahul.ac",
+   "name": "Rahul Das",
+   "role": "ac",
+   "password": "Rahul@Demo2026",
+   "area": "Kozhikode, Malappuram"
+  }
+ ],
+ "centres": [
+  {
+   "code": "DEMO-TVM-01",
+   "name": "Lakeview Skills Academy",
+   "location": "Kazhakoottam",
+   "district": "Thiruvananthapuram",
+   "ac": "arjun.ac"
+  },
+  {
+   "code": "DEMO-TVM-02",
+   "name": "Harbour Point Computer Centre",
+   "location": "Vizhinjam",
+   "district": "Thiruvananthapuram",
+   "ac": "arjun.ac"
+  },
+  {
+   "code": "DEMO-KLM-01",
+   "name": "Coastal Tech Learning Hub",
+   "location": "Karunagappally",
+   "district": "Kollam",
+   "ac": "arjun.ac"
+  },
+  {
+   "code": "DEMO-KLM-02",
+   "name": "Palm Grove Institute",
+   "location": "Kottarakkara",
+   "district": "Kollam",
+   "ac": "arjun.ac"
+  },
+  {
+   "code": "DEMO-EKM-01",
+   "name": "Metro Digital Campus",
+   "location": "Kakkanad",
+   "district": "Ernakulam",
+   "ac": "priya.ac"
+  },
+  {
+   "code": "DEMO-EKM-02",
+   "name": "Riverside Career Point",
+   "location": "Aluva",
+   "district": "Ernakulam",
+   "ac": "priya.ac"
+  },
+  {
+   "code": "DEMO-TSR-01",
+   "name": "Heritage Town Computer School",
+   "location": "Guruvayur",
+   "district": "Thrissur",
+   "ac": "priya.ac"
+  },
+  {
+   "code": "DEMO-TSR-02",
+   "name": "Greenfield Learning Studio",
+   "location": "Chalakudy",
+   "district": "Thrissur",
+   "ac": "priya.ac"
+  },
+  {
+   "code": "DEMO-KKD-01",
+   "name": "Sunrise Skill Centre",
+   "location": "Vadakara",
+   "district": "Kozhikode",
+   "ac": "rahul.ac"
+  },
+  {
+   "code": "DEMO-KKD-02",
+   "name": "Hilltop Future Academy",
+   "location": "Thamarassery",
+   "district": "Kozhikode",
+   "ac": "rahul.ac"
+  },
+  {
+   "code": "DEMO-MLP-01",
+   "name": "Valley Tech Institute",
+   "location": "Perinthalmanna",
+   "district": "Malappuram",
+   "ac": "rahul.ac"
+  },
+  {
+   "code": "DEMO-MLP-02",
+   "name": "Crescent Computer Centre",
+   "location": "Tirur",
+   "district": "Malappuram",
+   "ac": "rahul.ac"
+  }
+ ],
+ "assessments": {
+  "DEMO-TVM-01": [
+   {
+    "days_ago": 160,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "ops.admin": {
+      "status": "P",
+      "remark": "Admin Book not updated since last month."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     }
+    },
+    "general": "Generally well run; documentation gaps noted."
+   },
+   {
+    "days_ago": 85,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "ops.admin": {
+      "status": "P",
+      "remark": "Admin Book not updated since last month."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     }
+    },
+    "general": "Improvement noted in financial documentation."
+   },
+   {
+    "days_ago": 12,
+    "overrides": {
+     "ops.admin": {
+      "status": "P",
+      "remark": "Admin Book not updated since last month."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "stu.feedback": {
+      "status": "NA",
+      "remark": "Feedback cycle due next month."
+     }
+    },
+    "general": "Strong compliance overall."
+   }
+  ],
+  "DEMO-TVM-02": [
+   {
+    "days_ago": 120,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "ops.daybook": {
+      "status": "P",
+      "remark": "Day Book entries made in pencil for two days."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 20,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "mkt.commit": {
+      "status": "P",
+      "remark": "Instalment schedule not given in writing."
+     }
+    },
+    "general": "Procedural gaps increasing since last visit."
+   }
+  ],
+  "DEMO-KLM-01": [
+   {
+    "days_ago": 140,
+    "overrides": {
+     "ops.daybook": {
+      "status": "P",
+      "remark": "Day Book entries made in pencil for two days."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "fin.pending": {
+      "status": "P",
+      "remark": "Outstanding balances tracked in a separate spreadsheet only."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 30,
+    "overrides": {
+     "ops.daybook": {
+      "status": "P",
+      "remark": "Day Book entries made in pencil for two days."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     }
+    },
+    "general": "Well maintained centre."
+   }
+  ],
+  "DEMO-KLM-02": [
+   {
+    "days_ago": 25,
+    "overrides": {
+     "acad.exams": {
+      "status": "NA",
+      "remark": "No batch due for exams this term."
+     },
+     "fin.royalty": {
+      "status": "NA",
+      "remark": "Royalty holiday period for new franchise."
+     },
+     "stu.feedback": {
+      "status": "NA",
+      "remark": "First batch started only two weeks ago."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     }
+    },
+    "general": "New centre; several items not yet applicable."
+   }
+  ],
+  "DEMO-EKM-01": [
+   {
+    "days_ago": 95,
+    "overrides": {
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 9,
+    "overrides": {
+     "fin.extra": {
+      "status": "N",
+      "remark": "Students in DCA batch reported paying an additional Rs 1,500 'exam registration' charge not in the approved fee structure. Reported for verification."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     }
+    },
+    "general": "Centre is otherwise well organised. Additional charge reported by students needs Head Office verification."
+   }
+  ],
+  "DEMO-EKM-02": [
+   {
+    "days_ago": 170,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 90,
+    "overrides": {
+     "ops.ledger": {
+      "status": "N",
+      "remark": "Student Ledger not available at the time of visit; staff stated it is kept by the owner at home."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "fin.match": {
+      "status": "P",
+      "remark": "Minor timing mismatches; 2 payments entered a week after collection."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     }
+    },
+    "general": "Repeated gaps from previous visit."
+   },
+   {
+    "days_ago": 15,
+    "overrides": {
+     "ops.ledger": {
+      "status": "N",
+      "remark": "Student Ledger not available at the time of visit; staff stated it is kept by the owner at home."
+     },
+     "ops.receipts": {
+      "status": "N",
+      "remark": "Manual receipts issued from an unofficial book; system receipts not generated."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "N",
+      "remark": "Flat 40% 'referral' discount offered without approval."
+     },
+     "acad.schedule": {
+      "status": "N",
+      "remark": "Timetable not followed; two batches combined without approval."
+     },
+     "mkt.logos": {
+      "status": "N",
+      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
+     },
+     "stu.complaints": {
+      "status": "N",
+      "remark": "No complaint register maintained."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "fin.match": {
+      "status": "P",
+      "remark": "Minor timing mismatches; 2 payments entered a week after collection."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "acad.exams": {
+      "status": "N",
+      "remark": "Practical exams marked without the evaluator sheet; scores entered in bulk."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "N",
+      "remark": "Unapproved 'mobile repair' course promoted under the brand."
+     },
+     "fin.pending": {
+      "status": "P",
+      "remark": "Outstanding balances tracked in a separate spreadsheet only."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     }
+    },
+    "general": "Significant deterioration. Recommend management meeting with franchisee."
+   }
+  ],
+  "DEMO-TSR-01": [
+   {
+    "days_ago": 40,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "mkt.claims": {
+      "status": "N",
+      "remark": "Flyers advertise 'government-recognised diploma' for a short-term course."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "acad.materials": {
+      "status": "P",
+      "remark": "Course books for the new batch not yet provided."
+     },
+     "mkt.commit": {
+      "status": "P",
+      "remark": "Instalment schedule not given in writing."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     }
+    },
+    "general": "Marketing claims need correction."
+   }
+  ],
+  "DEMO-TSR-02": [
+   {
+    "days_ago": 18,
+    "overrides": {
+     "ops.inout": {
+      "status": "P",
+      "remark": ""
+     },
+     "stu.feedback": {
+      "status": "P",
+      "remark": ""
+     }
+    },
+    "general": "Excellent records."
+   }
+  ],
+  "DEMO-KKD-01": [
+   {
+    "days_ago": 110,
+    "overrides": {
+     "fin.discrep": {
+      "status": "N",
+      "remark": "Shortfall of approx. Rs 18,000 between day book and system collections; no explanation provided."
+     },
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 6,
+    "overrides": {
+     "acad.certs": {
+      "status": "N",
+      "remark": "Two students showed course certificates not traceable to the official issuance register. Suspected unauthorised issuance - pending verification by Head Office."
+     },
+     "acad.exams": {
+      "status": "N",
+      "remark": "Practical exams marked without the evaluator sheet; scores entered in bulk."
+     },
+     "acad.trainers": {
+      "status": "N",
+      "remark": "Two trainers have no record of authorisation or qualification documents."
+     },
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "mkt.admissions": {
+      "status": "N",
+      "remark": "Walk-in admissions recorded only in a notebook."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "brand.unauth": {
+      "status": "N",
+      "remark": "Unapproved 'mobile repair' course promoted under the brand."
+     },
+     "mkt.claims": {
+      "status": "N",
+      "remark": "Flyers advertise 'government-recognised diploma' for a short-term course."
+     },
+     "mkt.discounts": {
+      "status": "N",
+      "remark": "Flat 40% 'referral' discount offered without approval."
+     },
+     "acad.schedule": {
+      "status": "N",
+      "remark": "Timetable not followed; two batches combined without approval."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "stu.complaints": {
+      "status": "N",
+      "remark": "No complaint register maintained."
+     },
+     "mkt.logos": {
+      "status": "N",
+      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     }
+    },
+    "general": "Serious academic irregularities observed. Escalated to IAQC."
+   }
+  ],
+  "DEMO-KKD-02": [],
+  "DEMO-MLP-01": [
+   {
+    "days_ago": 210,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "fin.pending": {
+      "status": "P",
+      "remark": "Outstanding balances tracked in a separate spreadsheet only."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 120,
+    "overrides": {
+     "acad.attendance": {
+      "status": "P",
+      "remark": "Attendance marked weekly instead of daily."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     }
+    },
+    "general": ""
+   }
+  ],
+  "DEMO-MLP-02": [
+   {
+    "days_ago": 130,
+    "overrides": {
+     "ops.ledger": {
+      "status": "N",
+      "remark": "Student Ledger not available at the time of visit; staff stated it is kept by the owner at home."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "acad.exams": {
+      "status": "P",
+      "remark": "Internal assessment conducted without the approved question bank for one batch."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.logos": {
+      "status": "N",
+      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     }
+    },
+    "general": ""
+   },
+   {
+    "days_ago": 35,
+    "overrides": {
+     "ops.ledger": {
+      "status": "P",
+      "remark": "Ledger maintained but last 3 weeks of entries not posted."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "acad.schedule": {
+      "status": "P",
+      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
+     },
+     "ops.receipts": {
+      "status": "P",
+      "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "mkt.commit": {
+      "status": "P",
+      "remark": "Instalment schedule not given in writing."
+     },
+     "ops.daybook": {
+      "status": "P",
+      "remark": "Day Book entries made in pencil for two days."
+     },
+     "acad.trainers": {
+      "status": "P",
+      "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     },
+     "ops.records": {
+      "status": "P",
+      "remark": "Some files kept off-site; produced after 30 minutes."
+     }
+    },
+    "general": "Improvement from previous visit; follow-up needed."
+   }
+  ]
+ },
+ "reviews": [
+  {
+   "centre": "DEMO-KKD-01",
+   "index": 0,
+   "criterion": "fin.discrep",
+   "outcome": "Resolved",
+   "note": "Franchisee submitted bank deposit slips covering the shortfall. Accounts team confirmed reconciliation."
+  },
+  {
+   "centre": "DEMO-KKD-01",
+   "index": 1,
+   "criterion": "acad.certs",
+   "outcome": "Note",
+   "note": "Certificate numbers forwarded to Examination Cell for verification. Awaiting response."
+  },
+  {
+   "centre": "DEMO-EKM-01",
+   "index": 1,
+   "criterion": "fin.extra",
+   "outcome": "Note",
+   "note": "Student statements requested. Franchisee called for clarification meeting."
+  }
+ ]
+}
