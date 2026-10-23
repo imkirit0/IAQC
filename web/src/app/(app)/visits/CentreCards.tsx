@@ -12,7 +12,7 @@ export function CentreCards({ userId, centres }: { userId: string; centres: C[] 
   const ids = useStorageValue(() => centres.filter(c => localStorage.getItem(draftKey(userId, c.id))).map(c => c.id).join(","));
   const drafts = new Set(ids.split(",").filter(Boolean).map(Number));
 
-  if (!centres.length) return <div className="card"><div className="empty"><b>No centres assigned</b>Please ask the IAQC Coordinator to assign centres to your account.</div></div>;
+  if (!centres.length) return <div className="card"><div className="empty"><b>No centres assigned</b>Please ask the IAQA Coordinator to assign centres to your account.</div></div>;
   return (
     <motion.div className="centre-cards" initial="h" animate="s" variants={{ s: { transition: { staggerChildren: 0.06 } } }}>
       {centres.map(c => {

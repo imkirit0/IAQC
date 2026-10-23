@@ -92,3 +92,8 @@ assert ac.get("/api/centres").status_code == 401
 assert rds.app.test_client().post("/api/login", json={"username": "test.ac", "password": "Test@12345"}).status_code == 403
 assert any(l["action"] == "ACCESS_DENIED" for l in iaqc.get("/api/audit").json)
 print("All checks passed.")
+
+
+
+
+

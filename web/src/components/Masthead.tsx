@@ -16,7 +16,7 @@ const NAV: Record<Role, [string, string, IconName][]> = {
   cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"]],
   ac: [["/visits", "My centres", "centre"]],
 };
-const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQC Coordinator", cmd: "CMD, Super Admin" };
+const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin" };
 
 export function Masthead({ me }: { me: { name: string; username: string; role: Role } }) {
   const path = usePathname();
@@ -36,10 +36,10 @@ export function Masthead({ me }: { me: { name: string; username: string; role: R
   return (
     <header className="mast">
       <div className="mast-in">
-        <Link className="brand" href="/" aria-label="IAQC home">
+        <Link className="brand" href="/" aria-label="IAQA home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/gtec-logo.png" alt="G-TEC Education" width={50} height={34} />
-          <b>IAQC</b><small>Internal Audit<br />&amp; Quality Control</small>
+          <b>IAQA</b><small>Internal Audit<br />&amp; Quality Assurance</small>
         </Link>
         <nav className="nav" aria-label="Main">
           {NAV[me.role].map(([href, label, icon]) => (

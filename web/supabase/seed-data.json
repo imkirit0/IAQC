@@ -1,283 +1,158 @@
 {
  "checklist": [
   {
-   "section": "Operations and Documentation",
+   "section": "Operations",
    "criteria": [
     {
-     "key": "ops.admin",
-     "text": "Centre maintains the official Admin Book.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "ops.ledger",
-     "text": "Centre maintains an updated Student Ledger.",
+     "key": "ops.admission",
+     "text": "Maintain the mandatory admission book and student fee ledger.",
      "priority": "High",
      "critical": 0,
-     "mandatory": 0
+     "mandatory": 1
     },
     {
      "key": "ops.daybook",
-     "text": "Centre maintains a Day Book.",
+     "text": "Maintain other essential operational records, including the Day Book and In-Out Register.",
      "priority": "Medium",
      "critical": 0,
      "mandatory": 0
     },
     {
-     "key": "ops.inout",
-     "text": "Centre maintains a Student In-and-Out Register.",
+     "key": "ops.registry",
+     "text": "Maintain a student registry to track daily topics covered, student progress, and relevant fee details.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.infra",
+     "text": "Maintain the basic infrastructure and facilities required for smooth centre operations.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.feedbackqr",
+     "text": "Display the student feedback QR code and official feedback email ID in accessible locations.",
      "priority": "Low",
      "critical": 0,
      "mandatory": 0
     },
     {
-     "key": "ops.admission",
-     "text": "Student admission details are properly recorded in the official management system.",
+     "key": "ops.fees",
+     "text": "Ensure that student feedback, course fee details, and related payments are recorded accurately.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    },
+    {
+     "key": "ops.systems",
+     "text": "Maintain student, admission, enquiry, fee, and operational information through approved records and systems.",
      "priority": "High",
      "critical": 0,
      "mandatory": 1
     },
     {
-     "key": "ops.fees",
-     "text": "Student fee collections are accurately recorded in the system.",
-     "priority": "Critical",
-     "critical": 1,
-     "mandatory": 1
+     "key": "ops.tieups",
+     "text": "Record college tie-ups and other institutional tie-ups in GEMS.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.followup",
+     "text": "Maintain follow-up details for zero-paid students and students who have discontinued their courses.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.frontoffice",
+     "text": "Ensure adequate front office support for student enquiries, counselling, and communication.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "ops.certs",
+     "text": "Ensure that certificates received by the centre are handed over to the respective students without unnecessary delay.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
     },
     {
      "key": "ops.receipts",
-     "text": "Fee receipts are issued to students.",
-     "priority": "High",
-     "critical": 0,
+     "text": "Provide students with proper receipts or bills for fee payments.",
+     "priority": "Critical",
+     "critical": 1,
      "mandatory": 1
-    },
-    {
-     "key": "ops.records",
-     "text": "Centre records are updated and available for verification.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
     }
    ]
   },
   {
-   "section": "Financial Transparency",
+   "section": "Academics",
    "criteria": [
-    {
-     "key": "fin.structure",
-     "text": "Student fees correspond with the approved fee structure.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 1
-    },
-    {
-     "key": "fin.extra",
-     "text": "No unauthorised additional charges are collected.",
-     "priority": "Critical",
-     "critical": 1,
-     "mandatory": 1
-    },
-    {
-     "key": "fin.match",
-     "text": "Collection records match available student fee records.",
-     "priority": "Critical",
-     "critical": 1,
-     "mandatory": 1
-    },
-    {
-     "key": "fin.pending",
-     "text": "Pending instalments and outstanding balances are properly documented.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "fin.discrep",
-     "text": "Financial discrepancies are reported and explained.",
-     "priority": "Critical",
-     "critical": 1,
-     "mandatory": 0
-    },
-    {
-     "key": "fin.royalty",
-     "text": "Applicable royalty and other payments are properly documented.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    }
-   ]
-  },
-  {
-   "section": "Academic Quality",
-   "criteria": [
-    {
-     "key": "acad.schedule",
-     "text": "Classes are conducted according to the approved academic schedule.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    },
     {
      "key": "acad.trainers",
-     "text": "Qualified or authorised trainers are assigned.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
+     "text": "Ensure all trainers meet the mandatory academic qualification requirements and hold valid G-TEC Certified Trainer (GCT) authorization for the courses they teach.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
     },
     {
-     "key": "acad.attendance",
-     "text": "Student attendance records are maintained.",
+     "key": "acad.coverage",
+     "text": "Ensure that trainers are available for every division and course currently offered by the centre.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "acad.training",
+     "text": "Ensure mandatory attendance for the trainers training program.",
      "priority": "Medium",
      "critical": 0,
      "mandatory": 0
     },
     {
-     "key": "acad.materials",
-     "text": "Academic materials are provided according to the applicable policy.",
+     "key": "acad.curriculum",
+     "text": "Deliver the approved curriculum and maintain accurate records of batch schedules, syllabus progress, and practical learning.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "acad.premises",
+     "text": "Maintain suitable premises, classrooms, computer labs, and practical equipment for the courses being delivered.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.info",
+     "text": "Provide students with accessible feedback channels and clear information about courses, schedules, and academic support.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.resources",
+     "text": "Ensure academic resources supplied or prescribed for courses are available to trainers and used appropriately.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "acad.monitoring",
+     "text": "Monitor student progress and follow up appropriately with students who are absent, inactive, at risk of dropping out, or have discontinued their course.",
      "priority": "Medium",
      "critical": 0,
      "mandatory": 0
     },
     {
      "key": "acad.exams",
-     "text": "Student assessments and examination procedures follow approved standards.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "acad.certs",
-     "text": "Student certificates are issued only through authorised procedures.",
+     "text": "Ensure examinations and certificate processes follow approved G-TEC procedures and authorization requirements.",
      "priority": "Critical",
      "critical": 1,
-     "mandatory": 1
-    }
-   ]
-  },
-  {
-   "section": "Marketing and Admissions",
-   "criteria": [
-    {
-     "key": "mkt.brand",
-     "text": "Marketing materials follow approved brand guidelines.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "mkt.logos",
-     "text": "Only authorised logos, advertisements, and promotional claims are used.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "mkt.claims",
-     "text": "Course details and certifications are accurately represented.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "mkt.admissions",
-     "text": "Admissions are recorded in the official system.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 1
-    },
-    {
-     "key": "mkt.commit",
-     "text": "Student fee commitments are clearly communicated.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "mkt.discounts",
-     "text": "Unauthorised discounts and promotional offers are not provided.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    }
-   ]
-  },
-  {
-   "section": "Brand and Policy Compliance",
-   "criteria": [
-    {
-     "key": "brand.agreement",
-     "text": "Centre follows the franchise agreement and applicable organisational policies.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 1
-    },
-    {
-     "key": "brand.premises",
-     "text": "Centre premises and signage meet approved brand standards.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "brand.identity",
-     "text": "Official identity and branding are used correctly.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "brand.unauth",
-     "text": "No unauthorised courses or services are promoted.",
-     "priority": "High",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "brand.comm",
-     "text": "Centre follows approved communication and reporting procedures.",
-     "priority": "Low",
-     "critical": 0,
-     "mandatory": 0
-    }
-   ]
-  },
-  {
-   "section": "Student Satisfaction and Service Quality",
-   "criteria": [
-    {
-     "key": "stu.feedback",
-     "text": "Student feedback is collected where appropriate.",
-     "priority": "Low",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "stu.complaints",
-     "text": "Student complaints are recorded and addressed.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "stu.info",
-     "text": "Students receive accurate course and fee information.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "stu.promised",
-     "text": "Students report that classes are conducted as promised.",
-     "priority": "Medium",
-     "critical": 0,
-     "mandatory": 0
-    },
-    {
-     "key": "stu.concerns",
-     "text": "Student concerns about fees, academics, or services are documented.",
-     "priority": "Low",
-     "critical": 0,
      "mandatory": 0
     }
    ]
@@ -286,7 +161,7 @@
  "users": [
   {
    "username": "iaqc",
-   "name": "IAQC Coordinator (Demo)",
+   "name": "IAQA Coordinator (Demo)",
    "role": "iaqc",
    "password": "Iaqc@Demo2026",
    "area": "Head Office"
@@ -297,6 +172,14 @@
    "role": "cmd",
    "password": "Cmd@Demo2026",
    "area": "Head Office"
+  },
+  {
+   "username": "aso",
+   "name": "ASO Director, Malappuram (Demo)",
+   "role": "cmd",
+   "password": "Aso@Demo2026",
+   "area": "Malappuram",
+   "district": "Malappuram"
   },
   {
    "username": "arjun.ac",
@@ -411,39 +294,27 @@
    {
     "days_ago": 160,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
-     },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
-     },
-     "ops.admin": {
-      "status": "P",
-      "remark": "Admin Book not updated since last month."
-     },
-     "stu.info": {
+     "acad.info": {
       "status": "P",
       "remark": "Some students unclear about total course fee."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "P",
       "remark": "Festival discount offered without Head Office approval."
      },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
@@ -451,7 +322,7 @@
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      }
@@ -461,27 +332,23 @@
    {
     "days_ago": 85,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "ops.admin": {
-      "status": "P",
-      "remark": "Admin Book not updated since last month."
-     },
-     "brand.premises": {
+     "ops.infra": {
       "status": "P",
       "remark": "Signboard faded; brand colours not as per guidelines."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "P",
       "remark": "Festival discount offered without Head Office approval."
      },
@@ -489,7 +356,7 @@
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      }
@@ -499,19 +366,19 @@
    {
     "days_ago": 12,
     "overrides": {
-     "ops.admin": {
+     "ops.admission": {
       "status": "P",
       "remark": "Admin Book not updated since last month."
      },
-     "stu.promised": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Students reported frequent class cancellations last month."
      },
-     "brand.premises": {
+     "ops.infra": {
       "status": "P",
       "remark": "Signboard faded; brand colours not as per guidelines."
      },
-     "stu.feedback": {
+     "ops.feedbackqr": {
       "status": "NA",
       "remark": "Feedback cycle due next month."
      }
@@ -523,23 +390,19 @@
    {
     "days_ago": 120,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
-     },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "P",
       "remark": "Festival discount offered without Head Office approval."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
-     "stu.promised": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Students reported frequent class cancellations last month."
      },
@@ -547,7 +410,7 @@
       "status": "P",
       "remark": "Day Book entries made in pencil for two days."
      },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
      },
@@ -555,29 +418,13 @@
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
-     },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
-     },
-     "mkt.admissions": {
-      "status": "P",
-      "remark": "3 of 25 admissions not yet entered in the official system."
-     },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": ""
@@ -585,35 +432,27 @@
    {
     "days_ago": 20,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "fin.royalty": {
-      "status": "N",
-      "remark": "Royalty statements for the last two months not available."
-     },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "P",
       "remark": "Festival discount offered without Head Office approval."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
-     "stu.promised": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Students reported frequent class cancellations last month."
-     },
-     "acad.schedule": {
-      "status": "P",
-      "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
      "ops.receipts": {
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
      },
@@ -621,37 +460,17 @@
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
-     },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
-     },
-     "mkt.admissions": {
-      "status": "P",
-      "remark": "3 of 25 admissions not yet entered in the official system."
-     },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
      },
      "acad.trainers": {
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
-     },
-     "mkt.commit": {
-      "status": "P",
-      "remark": "Instalment schedule not given in writing."
      }
     },
     "general": "Procedural gaps increasing since last visit."
@@ -665,11 +484,11 @@
       "status": "P",
       "remark": "Day Book entries made in pencil for two days."
      },
-     "brand.premises": {
+     "ops.infra": {
       "status": "P",
       "remark": "Signboard faded; brand colours not as per guidelines."
      },
-     "fin.pending": {
+     "ops.followup": {
       "status": "P",
       "remark": "Outstanding balances tracked in a separate spreadsheet only."
      }
@@ -683,7 +502,7 @@
       "status": "P",
       "remark": "Day Book entries made in pencil for two days."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      }
@@ -699,17 +518,9 @@
       "status": "NA",
       "remark": "No batch due for exams this term."
      },
-     "fin.royalty": {
-      "status": "NA",
-      "remark": "Royalty holiday period for new franchise."
-     },
-     "stu.feedback": {
+     "ops.feedbackqr": {
       "status": "NA",
       "remark": "First batch started only two weeks ago."
-     },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
      }
     },
     "general": "New centre; several items not yet applicable."
@@ -719,25 +530,21 @@
    {
     "days_ago": 95,
     "overrides": {
-     "brand.premises": {
+     "ops.infra": {
       "status": "P",
       "remark": "Signboard faded; brand colours not as per guidelines."
      },
-     "stu.info": {
+     "acad.info": {
       "status": "P",
       "remark": "Some students unclear about total course fee."
      },
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
-     },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
      }
     },
     "general": ""
@@ -745,11 +552,11 @@
    {
     "days_ago": 9,
     "overrides": {
-     "fin.extra": {
+     "ops.fees": {
       "status": "N",
       "remark": "Students in DCA batch reported paying an additional Rs 1,500 'exam registration' charge not in the approved fee structure. Reported for verification."
      },
-     "stu.info": {
+     "acad.info": {
       "status": "P",
       "remark": "Some students unclear about total course fee."
      }
@@ -761,7 +568,7 @@
    {
     "days_ago": 170,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
@@ -769,35 +576,23 @@
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "fin.structure": {
+     "ops.fees": {
       "status": "P",
       "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
      },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
-     },
-     "mkt.discounts": {
-      "status": "P",
-      "remark": "Festival discount offered without Head Office approval."
-     },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
@@ -805,21 +600,9 @@
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
-     },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
-     },
-     "mkt.admissions": {
-      "status": "P",
-      "remark": "3 of 25 admissions not yet entered in the official system."
-     },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": ""
@@ -827,7 +610,7 @@
    {
     "days_ago": 90,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "N",
       "remark": "Student Ledger not available at the time of visit; staff stated it is kept by the owner at home."
      },
@@ -835,27 +618,15 @@
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "fin.structure": {
+     "ops.fees": {
       "status": "P",
       "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
      },
-     "fin.royalty": {
-      "status": "N",
-      "remark": "Royalty statements for the last two months not available."
-     },
-     "mkt.discounts": {
-      "status": "P",
-      "remark": "Festival discount offered without Head Office approval."
-     },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
@@ -863,29 +634,17 @@
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
      },
-     "fin.match": {
-      "status": "P",
-      "remark": "Minor timing mismatches; 2 payments entered a week after collection."
-     },
      "acad.exams": {
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
-     },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
      },
-     "mkt.admissions": {
+     "ops.systems": {
       "status": "P",
       "remark": "3 of 25 admissions not yet entered in the official system."
-     },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": "Repeated gaps from previous visit."
@@ -893,7 +652,7 @@
    {
     "days_ago": 15,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "N",
       "remark": "Student Ledger not available at the time of visit; staff stated it is kept by the owner at home."
      },
@@ -901,27 +660,15 @@
       "status": "N",
       "remark": "Manual receipts issued from an unofficial book; system receipts not generated."
      },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "fin.royalty": {
-      "status": "N",
-      "remark": "Royalty statements for the last two months not available."
-     },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "N",
       "remark": "Flat 40% 'referral' discount offered without approval."
      },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "N",
       "remark": "Timetable not followed; two batches combined without approval."
      },
-     "mkt.logos": {
-      "status": "N",
-      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "N",
       "remark": "No complaint register maintained."
      },
@@ -929,11 +676,7 @@
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
      },
-     "fin.match": {
-      "status": "P",
-      "remark": "Minor timing mismatches; 2 payments entered a week after collection."
-     },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
      },
@@ -941,23 +684,15 @@
       "status": "N",
       "remark": "Practical exams marked without the evaluator sheet; scores entered in bulk."
      },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
-     },
-     "mkt.admissions": {
+     "ops.systems": {
       "status": "P",
       "remark": "3 of 25 admissions not yet entered in the official system."
      },
-     "brand.unauth": {
-      "status": "N",
-      "remark": "Unapproved 'mobile repair' course promoted under the brand."
-     },
-     "fin.pending": {
+     "ops.followup": {
       "status": "P",
       "remark": "Outstanding balances tracked in a separate spreadsheet only."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      }
@@ -969,7 +704,7 @@
    {
     "days_ago": 40,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
@@ -977,55 +712,35 @@
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
      },
-     "mkt.claims": {
+     "acad.info": {
       "status": "N",
       "remark": "Flyers advertise 'government-recognised diploma' for a short-term course."
      },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
-     },
-     "stu.promised": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Students reported frequent class cancellations last month."
      },
-     "acad.materials": {
+     "acad.resources": {
       "status": "P",
       "remark": "Course books for the new batch not yet provided."
-     },
-     "mkt.commit": {
-      "status": "P",
-      "remark": "Instalment schedule not given in writing."
-     },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
      },
      "acad.exams": {
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "fin.structure": {
+     "ops.fees": {
       "status": "P",
       "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "mkt.discounts": {
-      "status": "P",
-      "remark": "Festival discount offered without Head Office approval."
-     },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
      },
      "ops.receipts": {
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      }
@@ -1037,11 +752,11 @@
    {
     "days_ago": 18,
     "overrides": {
-     "ops.inout": {
+     "ops.daybook": {
       "status": "P",
       "remark": ""
      },
-     "stu.feedback": {
+     "ops.feedbackqr": {
       "status": "P",
       "remark": ""
      }
@@ -1053,11 +768,11 @@
    {
     "days_ago": 110,
     "overrides": {
-     "fin.discrep": {
+     "ops.fees": {
       "status": "N",
       "remark": "Shortfall of approx. Rs 18,000 between day book and system collections; no explanation provided."
      },
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
@@ -1065,45 +780,25 @@
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "mkt.admissions": {
+     "ops.systems": {
       "status": "P",
       "remark": "3 of 25 admissions not yet entered in the official system."
-     },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
-     },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
      },
      "ops.receipts": {
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
      },
-     "mkt.discounts": {
-      "status": "P",
-      "remark": "Festival discount offered without Head Office approval."
-     },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
-     "ops.records": {
-      "status": "P",
-      "remark": "Some files kept off-site; produced after 30 minutes."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
-     },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
      },
      "acad.trainers": {
       "status": "P",
@@ -1115,73 +810,41 @@
    {
     "days_ago": 6,
     "overrides": {
-     "acad.certs": {
-      "status": "N",
-      "remark": "Two students showed course certificates not traceable to the official issuance register. Suspected unauthorised issuance - pending verification by Head Office."
-     },
      "acad.exams": {
       "status": "N",
-      "remark": "Practical exams marked without the evaluator sheet; scores entered in bulk."
+      "remark": "Two students showed course certificates not traceable to the official issuance register. Suspected unauthorised issuance - pending verification by Head Office."
      },
      "acad.trainers": {
       "status": "N",
       "remark": "Two trainers have no record of authorisation or qualification documents."
      },
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "mkt.admissions": {
+     "ops.systems": {
       "status": "N",
       "remark": "Walk-in admissions recorded only in a notebook."
-     },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
-     },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
      },
      "ops.receipts": {
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "brand.unauth": {
-      "status": "N",
-      "remark": "Unapproved 'mobile repair' course promoted under the brand."
-     },
-     "mkt.claims": {
+     "acad.info": {
       "status": "N",
       "remark": "Flyers advertise 'government-recognised diploma' for a short-term course."
      },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "N",
       "remark": "Flat 40% 'referral' discount offered without approval."
      },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "N",
       "remark": "Timetable not followed; two batches combined without approval."
      },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "ops.records": {
-      "status": "P",
-      "remark": "Some files kept off-site; produced after 30 minutes."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "N",
       "remark": "No complaint register maintained."
-     },
-     "mkt.logos": {
-      "status": "N",
-      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
-     },
-     "stu.promised": {
-      "status": "P",
-      "remark": "Students reported frequent class cancellations last month."
      }
     },
     "general": "Serious academic irregularities observed. Escalated to IAQC."
@@ -1192,23 +855,19 @@
    {
     "days_ago": 210,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
-     },
-     "fin.pending": {
+     "ops.followup": {
       "status": "P",
       "remark": "Outstanding balances tracked in a separate spreadsheet only."
      }
@@ -1218,17 +877,13 @@
    {
     "days_ago": 120,
     "overrides": {
-     "acad.attendance": {
+     "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
      },
-     "brand.premises": {
+     "ops.infra": {
       "status": "P",
       "remark": "Signboard faded; brand colours not as per guidelines."
-     },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
      }
     },
     "general": ""
@@ -1238,19 +893,15 @@
    {
     "days_ago": 130,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "N",
       "remark": "Student Ledger not available at the time of visit; staff stated it is kept by the owner at home."
      },
-     "fin.royalty": {
-      "status": "N",
-      "remark": "Royalty statements for the last two months not available."
-     },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "P",
       "remark": "Festival discount offered without Head Office approval."
      },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
@@ -1258,13 +909,9 @@
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "mkt.claims": {
+     "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
-     },
-     "stu.info": {
-      "status": "P",
-      "remark": "Some students unclear about total course fee."
      },
      "acad.trainers": {
       "status": "P",
@@ -1274,29 +921,13 @@
       "status": "P",
       "remark": "Internal assessment conducted without the approved question bank for one batch."
      },
-     "brand.agreement": {
-      "status": "P",
-      "remark": "Franchise agreement copy not displayed; renewal pending."
-     },
-     "mkt.logos": {
-      "status": "N",
-      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
-     },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
-     },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": ""
@@ -1304,19 +935,15 @@
    {
     "days_ago": 35,
     "overrides": {
-     "ops.ledger": {
+     "ops.admission": {
       "status": "P",
       "remark": "Ledger maintained but last 3 weeks of entries not posted."
      },
-     "fin.royalty": {
-      "status": "P",
-      "remark": "Royalty for August paid late; supporting statement not filed."
-     },
-     "mkt.discounts": {
+     "ops.fees": {
       "status": "P",
       "remark": "Festival discount offered without Head Office approval."
      },
-     "acad.schedule": {
+     "acad.curriculum": {
       "status": "P",
       "remark": "Evening batch reduced from 5 to 3 days a week without approval."
      },
@@ -1324,13 +951,9 @@
       "status": "P",
       "remark": "Receipts issued for most payments; 4 of 20 sampled cash payments had no receipt copy."
      },
-     "stu.info": {
+     "acad.info": {
       "status": "P",
       "remark": "Some students unclear about total course fee."
-     },
-     "mkt.commit": {
-      "status": "P",
-      "remark": "Instalment schedule not given in writing."
      },
      "ops.daybook": {
       "status": "P",
@@ -1340,23 +963,11 @@
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
      },
-     "mkt.logos": {
-      "status": "P",
-      "remark": "Old logo still used on wall posters at the entrance."
-     },
-     "fin.structure": {
-      "status": "P",
-      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
-     },
-     "stu.complaints": {
+     "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      },
-     "brand.unauth": {
-      "status": "P",
-      "remark": "Spoken English classes promoted alongside approved courses without approval."
-     },
-     "ops.records": {
+     "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
      }
@@ -1369,21 +980,21 @@
   {
    "centre": "DEMO-KKD-01",
    "index": 0,
-   "criterion": "fin.discrep",
+   "criterion": "ops.fees",
    "outcome": "Resolved",
    "note": "Franchisee submitted bank deposit slips covering the shortfall. Accounts team confirmed reconciliation."
   },
   {
    "centre": "DEMO-KKD-01",
    "index": 1,
-   "criterion": "acad.certs",
+   "criterion": "acad.exams",
    "outcome": "Note",
    "note": "Certificate numbers forwarded to Examination Cell for verification. Awaiting response."
   },
   {
    "centre": "DEMO-EKM-01",
    "index": 1,
-   "criterion": "fin.extra",
+   "criterion": "ops.fees",
    "outcome": "Note",
    "note": "Student statements requested. Franchisee called for clarification meeting."
   }

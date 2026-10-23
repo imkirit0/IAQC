@@ -183,7 +183,7 @@ export async function resetPassword(id: string, password: string) {
   });
 }
 
-/** IAQC sets a report's risk level by judgement (null = back to computed). Stored as a review; the report itself never changes. */
+/** IAQA sets a report's risk level by judgement (null = back to computed). Stored as a review; the report itself never changes. */
 export async function setRiskLevel(assessmentId: number, input: { category: string | null; note: string }) {
   return run(async () => {
     const me = await guard("iaqc");
@@ -215,7 +215,7 @@ export async function submitAssessment(input: { centre_id: number; visit_date: s
       centre_id: c!.id, ac_id: me.id, visit_date: input.visit_date, checklist_version: snap.version, snapshot: snap, responses, general_remarks: clean(input.general_remarks, 3000),
     }).select("id, submitted_at").single());
     await audit(me, "ASSESSMENT_SUBMITTED", `#${row.id} ${c!.code} visit=${input.visit_date}`);
-    return { ok: true, data: { id: row.id, submitted_at: row.submitted_at, reference: `IAQC-${String(row.id).padStart(5, "0")}` } };
+    return { ok: true, data: { id: row.id, submitted_at: row.submitted_at, reference: `IAQA-${String(row.id).padStart(5, "0")}` } };
   });
 }
 

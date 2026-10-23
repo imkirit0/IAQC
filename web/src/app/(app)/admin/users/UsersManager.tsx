@@ -11,7 +11,7 @@ import { initials } from "@/lib/format";
 
 type User = { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd"; area: string; active: boolean; centres: { id: number; code: string }[] };
 type CentreLite = { id: number; code: string; name: string; district: string; ac_id: string | null; ac_name: string | null };
-const ROLE = { ac: "Area Coordinator", iaqc: "IAQC Coordinator", cmd: "CMD, Super Admin" };
+const ROLE = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin" };
 const tempPassword = () => "Temp@" + Math.random().toString(36).slice(2, 8) + Math.floor(Math.random() * 90 + 10);
 
 /** ASO chips select whole areas; the grouped list fine-tunes single centres. The area text is derived from the selection. */
@@ -87,7 +87,7 @@ export function UsersManager({ users, centres }: { users: User[]; centres: Centr
 
   return (
     <>
-      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. IAQC and CMD are fixed system accounts in this prototype.">
+      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. IAQA and CMD are fixed system accounts in this prototype.">
         <button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New Area Coordinator</button>
       </PageHead>
       <div className="card"><div className="tw"><table>

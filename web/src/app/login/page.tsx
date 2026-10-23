@@ -25,7 +25,7 @@ export default function LoginPage() {
           
         </div>
         <div className="title">
-          <h1 className="wordmark" aria-label="IAQC, Internal Audit and Quality Control">IAQC</h1>
+          <h1 className="wordmark" aria-label="IAQA, Internal Audit and Quality Assurance">IAQA</h1>
           <div className="tri" aria-hidden="true"><i className="g" /><i className="y" /><i className="r" /></div>
         </div>
         <svg className="cover-arc" viewBox="0 0 600 600" aria-hidden="true">

@@ -20,8 +20,8 @@ const Line = ({ c }: { c: RankRow }) => (
 );
 
 async function Overview() {
-  await requireRole("cmd");
-  const { centres: cs, settings } = await getRanking();
+  const me = await requireRole("cmd");
+  const { centres: cs, settings } = await getRanking(undefined, undefined, me.district);
   const th = settings.thresholds;
   const scored = cs.filter(c => c.score != null);
   const avg = scored.length ? scored.reduce((a, c) => a + c.score!, 0) / scored.length : null;
@@ -84,7 +84,7 @@ async function Overview() {
               <td>{c.district}</td><td className="right"><span className="num" style={{ fontSize: 16 }}>{pct(c.score)}</span></td><td><Badge c={c.category} /></td>
               <td className="small">
                 {c.alerts.length > 0 && <div><AlertTag n={c.alerts.length} /> {c.alerts.map(a => a.text).join("; ")}</div>}
-                {c.category === "Red" && <div>{c.override ? `Risk level set to Red by IAQC: ${c.override.note}` : `Compliance below ${th.yellow}%`}</div>}
+                {c.category === "Red" && <div>{c.override ? `Risk level set to Red by IAQA: ${c.override.note}` : `Compliance below ${th.yellow}%`}</div>}
                 {(c.trend ?? 0) < 0 && <div>Compliance fell {Math.abs(c.trend!).toFixed(1)} pts since the previous visit</div>}
               </td>
               <td className="right"><Link className="btn sm" href={`/scorecard/${c.id}`}>Scorecard</Link></td>

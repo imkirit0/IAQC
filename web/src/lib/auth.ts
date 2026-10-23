@@ -4,18 +4,19 @@ import { redirect } from "next/navigation";
 import { authClient, db } from "./supabase";
 
 export type Role = "ac" | "iaqc" | "cmd";
-export type Me = { id: string; username: string; name: string; role: Role };
+export type Me = { id: string; username: string; name: string; role: Role; district: string | null };
 
 export const HOME: Record<Role, string> = { iaqc: "/ranking", cmd: "/overview", ac: "/visits" };
-export const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQC Coordinator", cmd: "CMD, Super Admin" };
+export const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin" };
 
 /** Current user with a live profile check (deactivated accounts lose access immediately). Cached per request. */
 export const getMe = cache(async (): Promise<Me | null> => {
   const { data } = await (await authClient()).auth.getUser();
   if (!data.user) return null;
-  const { data: p } = await db().from("profiles").select("id, username, name, role, active").eq("id", data.user.id).maybeSingle();
+  // select("*"): works before migration 0003 adds `district`.
+  const { data: p } = await db().from("profiles").select("*").eq("id", data.user.id).maybeSingle();
   if (!p || !p.active) return null;
-  return { id: p.id, username: p.username, name: p.name, role: p.role };
+  return { id: p.id, username: p.username, name: p.name, role: p.role, district: p.district || null };
 });
 
 /** Pages: redirect away when not signed in or not permitted. */
@@ -25,6 +26,9 @@ export async function requireRole(...roles: Role[]): Promise<Me> {
   if (!roles.includes(me.role)) redirect(HOME[me.role]);
   return me;
 }
+
+/** District-scoped accounts may only see centres in their district. */
+export const inScope = (me: Me, district: string) => !me.district || me.district.toLowerCase() === district.toLowerCase();
 
 export class Forbidden extends Error {}
 

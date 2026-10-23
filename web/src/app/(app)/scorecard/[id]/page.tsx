@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Loading from "../../loading";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireRole } from "@/lib/auth";
+import { inScope, requireRole } from "@/lib/auth";
 import { getAssessment, getScorecard } from "@/lib/data";
 import { fmtDate, fmtDT, pct, ref } from "@/lib/format";
 import { Icon } from "@/components/Icon";
@@ -19,7 +19,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
   const me = await requireRole("iaqc", "cmd");
   const [{ id }, { a: aParam }] = await Promise.all([params, searchParams]);
   const sc = await getScorecard(Number(id));
-  if (!sc) notFound();
+  if (!sc || !inScope(me, sc.centre.district)) notFound();
   const { centre: c, history: hist } = sc;
   const aid = aParam ? Number(aParam) : hist.at(-1)?.id;
   const a = aid ? await getAssessment(aid) : null;
@@ -47,7 +47,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
                 <div className="big-score" style={{ margin: "6px 0 12px" }}>{a.score == null ? "—" : <CountUp to={a.score} decimals={2} />}<small>%</small></div>
                 <div className="row" style={{ gap: 10 }}><Badge c={a.category} /><AlertTag n={a.alerts.length} />
                   {me.role === "iaqc" && <RiskLevelControl assessmentId={a.id} current={a.category} computed={a.computed_category} overridden={!!a.override} />}</div>
-                {a.override && <div className="override-note"><b>Set by IAQC</b> · {a.override.by}, {fmtDate(a.override.at)} · computed level {a.computed_category}<span>{a.override.note}</span></div>}
+                {a.override && <div className="override-note"><b>Set by IAQA</b> · {a.override.by}, {fmtDate(a.override.at)} · computed level {a.computed_category}<span>{a.override.note}</span></div>}
                 <div className="small muted" style={{ marginTop: 10 }}>Risk <b>{pct(a.risk)}</b> · {a.earned} of {a.max} applicable points</div>
               </div>
             </div>
@@ -55,7 +55,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
               <dt>Assessment date</dt><dd>{fmtDate(a.visit_date)} <span className={`chip ${isLatest ? "ok" : ""}`}>{isLatest ? "Latest" : "Historical"}</span></dd>
               <dt>Reported by</dt><dd>{a.ac_name}</dd>
               <dt>Submitted</dt><dd>{fmtDT(a.submitted_at)} · Ref {ref(a.id)}</dd>
-              <dt>Status</dt><dd>{a.status === "Scored" ? "Submitted and scored" : a.status} · {a.reviews.length ? "Reviewed by IAQC" : "Awaiting IAQC review"}</dd>
+              <dt>Status</dt><dd>{a.status === "Scored" ? "Submitted and scored" : a.status} · {a.reviews.length ? "Reviewed by IAQA" : "Awaiting IAQA review"}</dd>
               <dt>Checklist</dt><dd>Version {a.checklist_version} <span className="small faint">— scored with the rules in force at submission</span></dd>
             </dl>
           </Reveal>

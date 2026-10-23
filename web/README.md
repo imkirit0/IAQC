@@ -26,6 +26,7 @@ Internal Audit and Quality Control of Franchise Centres — demonstration applic
 |---|---|---|
 | IAQC Coordinator | `iaqc` | `Iaqc@Demo2026` |
 | CMD (read-only) | `cmd` | `Cmd@Demo2026` |
+| ASO Director, Malappuram (read-only, MLP centres only) | `aso` | `Aso@Demo2026` |
 | Area Coordinators | `arjun.ac` · `priya.ac` · `rahul.ac` | `Arjun@Demo2026` · `Priya@Demo2026` · `Rahul@Demo2026` |
 
 Usernames map to Supabase Auth users `<username>@rds.local`.

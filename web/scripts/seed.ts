@@ -8,7 +8,7 @@ import { compute, validateResponses, type Priority, type Snapshot } from "../src
 
 type Seed = {
   checklist: { section: string; criteria: { key: string; text: string; priority: Priority; critical: number; mandatory: number }[] }[];
-  users: { username: string; name: string; role: string; password: string; area: string }[];
+  users: { username: string; name: string; role: string; password: string; area: string; district?: string }[];
   centres: { code: string; name: string; location: string; district: string; ac: string }[];
   assessments: Record<string, { days_ago: number; overrides: Record<string, { status: string; remark: string }>; general: string }[]>;
   reviews: { centre: string; index: number; criterion: string | null; outcome: string; note: string }[];
@@ -54,7 +54,7 @@ async function main() {
   for (const u of S.users) {
     const created = await q(sb.auth.admin.createUser({ email: email(u.username), password: u.password, email_confirm: true }));
     uid[u.username] = created.user!.id;
-    await q(sb.from("profiles").insert({ id: created.user!.id, username: u.username, name: u.name, role: u.role, area: u.area }));
+    await q(sb.from("profiles").insert({ id: created.user!.id, username: u.username, name: u.name, role: u.role, area: u.area, ...(u.district && { district: u.district }) }));
   }
   const cid: Record<string, number> = {};
   for (const c of S.centres) cid[c.code] = (await q(sb.from("centres").insert({ code: c.code, name: c.name, location: c.location, district: c.district, ac_id: uid[c.ac], demo: true }).select("id").single())).id;

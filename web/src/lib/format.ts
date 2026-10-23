@@ -3,7 +3,7 @@ export const fmtDate = (d?: string | null) =>
   d ? new Date(d.length === 10 ? d + "T00:00:00" : d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 export const fmtDT = (d?: string | null) =>
   d ? new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
-export const ref = (id: number) => `IAQC-${String(id).padStart(5, "0")}`;
+export const ref = (id: number) => `IAQA-${String(id).padStart(5, "0")}`;
 export const initials = (name: string) => name.replace(/\(.*\)/, "").trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
 export const today = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
 

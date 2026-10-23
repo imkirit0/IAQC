@@ -7,8 +7,8 @@ import "./globals.css";
 const sans = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-sans", weight: ["400", "500", "600", "700"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "IAQC — Internal Audit & Quality Control", template: "%s · IAQC" },
-  description: "Internal Audit and Quality Control of Centres",
+  title: { default: "IAQA — Internal Audit & Quality Assurance", template: "%s · IAQA" },
+  description: "Internal Audit and Quality Assurance of Centres",
 };
 
 // Resolve the theme before first paint: saved choice, else the OS preference.

@@ -62,7 +62,7 @@ export function ItemsTable({ items }: { items: Item[] }) {
 
 const LEVELS = [["Green", "Low risk"], ["Yellow", "Moderate"], ["Red", "High risk"]] as const;
 
-/** IAQC override of the report's risk level. The computed level stays on record; a reason is required. */
+/** IAQA override of the report's risk level. The computed level stays on record; a reason is required. */
 export function RiskLevelControl({ assessmentId, current, computed, overridden }: { assessmentId: number; current: string; computed: string; overridden: boolean }) {
   const [open, setOpen] = useState(false), router = useRouter(), toast = useToast();
   return (

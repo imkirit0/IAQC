@@ -29,7 +29,7 @@ export function AssessmentsTable({ list }: { list: Row[] }) {
               <td><Link href={`/scorecard/${a.centre_id}?a=${a.id}`}><b>{a.centre_name}</b></Link><div className="code">{a.code}</div></td>
               <td>{a.district}</td><td>{a.ac_name}</td>
               <td className="right"><span className="num" style={{ fontSize: 15 }}>{pct(a.score)}</span></td>
-              <td><Badge c={a.category} />{a.override && <div className="set-by">Set by IAQC</div>}</td><td><AlertTag n={a.alerts} /></td>
+              <td><Badge c={a.category} />{a.override && <div className="set-by">Set by IAQA</div>}</td><td><AlertTag n={a.alerts} /></td>
               <td className="right mono">{a.assessed} / {a.na}</td><td className="small">v{a.version}</td>
               <td className="right"><Link className="btn sm" href={`/scorecard/${a.centre_id}?a=${a.id}`}>Open</Link></td>
             </motion.tr>

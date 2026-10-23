@@ -9,7 +9,7 @@ export const metadata = { title: "Assessments" };
 
 async function Assessments() {
   const me = await requireRole("iaqc", "cmd");
-  const list = await listAssessments();
+  const list = await listAssessments(me.district);
   return (
     <>
       <PageHead title={me.role === "cmd" ? "Assessment history" : "Assessments"} sub={`${list.length} submitted reports. Every report is preserved exactly as submitted.`} />

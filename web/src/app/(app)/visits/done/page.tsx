@@ -20,7 +20,7 @@ export default function Done() {
           </svg>
         </motion.div>
         <h1>Report submitted</h1>
-        <p className="muted" style={{ margin: "10px auto 0", maxWidth: "40ch" }}>Your centre visit report has been recorded and sent to the IAQC Coordinator for review.</p>
+        <p className="muted" style={{ margin: "10px auto 0", maxWidth: "40ch" }}>Your centre visit report has been recorded and sent to the IAQA Coordinator for review.</p>
         <dl className="info-list" style={{ maxWidth: 340, margin: "26px auto", textAlign: "left", padding: "16px 0", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)" }}>
           <dt>Reference</dt><dd>{r.reference ?? "—"}</dd><dt>Centre</dt><dd>{r.centre ?? "—"}</dd>
           <dt>Visit date</dt><dd>{fmtDate(r.date)}</dd><dt>Submitted</dt><dd>{fmtDT(r.submitted_at)}</dd>

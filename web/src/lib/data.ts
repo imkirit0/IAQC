@@ -71,7 +71,7 @@ async function alertStates(ids: number[]): Promise<Map<string, string>> {
   return m;
 }
 
-/** IAQC's risk-level decision per report: the latest 'Risk Level Set' review wins; a null level returns to the computed one. */
+/** IAQA's risk-level decision per report: the latest 'Risk Level Set' review wins; a null level returns to the computed one. */
 async function overrides(ids: number[], names: Map<string, string>): Promise<Map<number, Override>> {
   const m = new Map<number, Override>();
   if (!ids.length) return m;
@@ -80,13 +80,13 @@ async function overrides(ids: number[], names: Map<string, string>): Promise<Map
   return m;
 }
 
-export async function getCentres(opts: { acId?: string } = {}): Promise<Centre[]> {
+export async function getCentres(opts: { acId?: string; district?: string | null } = {}): Promise<Centre[]> {
   let q = db().from("centres").select("*").order("name");
   if (opts.acId) q = q.eq("ac_id", opts.acId).eq("active", true);
   const [cs, names, visits] = await Promise.all([q, profileNames(), db().from("assessments").select("centre_id, visit_date")]);
   const last = new Map<number, string>();
   (must(visits) as { centre_id: number; visit_date: string }[]).forEach(v => { if (v.visit_date > (last.get(v.centre_id) ?? "")) last.set(v.centre_id, v.visit_date); });
-  return (must(cs) as Centre[]).map(c => ({ ...c, ac_name: c.ac_id ? names.get(c.ac_id) ?? null : null, last_visit: last.get(c.id) ?? null }));
+  return (must(cs) as Centre[]).filter(c => !opts.district || c.district.toLowerCase() === opts.district.toLowerCase()).map(c => ({ ...c, ac_name: c.ac_id ? names.get(c.ac_id) ?? null : null, last_visit: last.get(c.id) ?? null }));
 }
 
 export type RankRow = Centre & {
@@ -95,8 +95,8 @@ export type RankRow = Centre & {
   trend: number | null; due: boolean; days_since: number | null; history: { id: number; visit_date: string; score: number | null; category: Category }[];
 };
 
-export async function getRanking(from?: string, to?: string): Promise<{ centres: RankRow[]; settings: Settings }> {
-  const [settings, centres, names] = await Promise.all([getSettings(), getCentres(), profileNames()]);
+export async function getRanking(from?: string, to?: string, district?: string | null): Promise<{ centres: RankRow[]; settings: Settings }> {
+  const [settings, centres, names] = await Promise.all([getSettings(), getCentres({ district }), profileNames()]);
   let aq = db().from("assessments").select("*").order("visit_date").order("id");
   if (from) aq = aq.gte("visit_date", from);
   if (to) aq = aq.lte("visit_date", to);
@@ -123,9 +123,9 @@ export async function getRanking(from?: string, to?: string): Promise<{ centres:
   return { centres: rows.map((r, i) => ({ ...r, rank: i + 1 })), settings };
 }
 
-export async function listAssessments() {
-  const [rows, centres, names] = await Promise.all([db().from("assessments").select("*").order("visit_date", { ascending: false }).order("id", { ascending: false }), getCentres(), profileNames()]);
-  const byId = new Map(centres.map(c => [c.id, c])), list = must(rows) as AssessmentRow[];
+export async function listAssessments(district?: string | null) {
+  const [rows, centres, names] = await Promise.all([db().from("assessments").select("*").order("visit_date", { ascending: false }).order("id", { ascending: false }), getCentres({ district }), profileNames()]);
+  const byId = new Map(centres.map(c => [c.id, c])), list = (must(rows) as AssessmentRow[]).filter(a => byId.has(a.centre_id));
   const ovr = await overrides(list.map(a => a.id), names);
   return list.map(a => {
     const c = byId.get(a.centre_id)!;

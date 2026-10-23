@@ -70,7 +70,7 @@ export function RankingTable({ centres, from, to, defaultDir }: { centres: RankR
                     <td>{c.district}{c.location !== c.name && <div className="small faint">{c.location}</div>}</td>
                     <td className="right"><span className="num" style={{ fontSize: 16 }}>{pct(c.score)}</span>
                       {c.score != null && <><ScoreBar v={c.score} c={c.category} /><div className="small faint" style={{ marginTop: 3 }}>Risk {pct(c.risk)}</div></>}</td>
-                    <td><div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}><Badge c={c.category} />{c.override && <span className="set-by">Set by IAQC</span>}<AlertTag n={c.alerts.length} /></div></td>
+                    <td><div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}><Badge c={c.category} />{c.override && <span className="set-by">Set by IAQA</span>}<AlertTag n={c.alerts.length} /></div></td>
                     <td><TrendCell trend={c.trend} /></td>
                     <td className="nowrap">{fmtDate(c.last_visit)}<div className={c.due ? "small" : "small faint"} style={c.due ? { color: "var(--amber)" } : undefined}>{c.days_since == null ? "Never visited" : c.days_since === 0 ? "Today" : `${c.days_since} day${c.days_since === 1 ? "" : "s"} ago`}</div></td>
                     <td>{c.reported_by ?? c.ac_name ?? "—"}</td>

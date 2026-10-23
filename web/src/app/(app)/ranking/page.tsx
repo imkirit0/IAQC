@@ -14,7 +14,7 @@ export const metadata = { title: "Risk ranking" };
 async function RankingPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string }> }) {
   const me = await requireRole("iaqc", "cmd");
   const { from, to } = await searchParams;
-  const { centres, settings } = await getRanking(from, to);
+  const { centres, settings } = await getRanking(from, to, me.district);
   const n = (k: string) => centres.filter(c => c.category === k).length;
   const latest = centres.map(c => c.last_visit).filter(Boolean).sort().at(-1);
   return (
@@ -29,7 +29,7 @@ async function RankingPage({ searchParams }: { searchParams: Promise<{ from?: st
       <RiskRail centres={centres} />
       <RankingTable centres={centres} from={from ?? ""} to={to ?? ""} defaultDir={me.role === "cmd" ? -1 : 1} />
       <p className="small faint" style={{ marginTop: 14, maxWidth: "110ch" }}>
-        Ranking places centres with critical alerts first, then by risk level (Red, Yellow, Green), then the lowest compliance score. A risk level set by IAQC is marked <b>Set by IAQC</b>. Centres without a valid assessment are shown as <b>Not Assessed</b>, never as low risk.
+        Ranking places centres with critical alerts first, then by risk level (Red, Yellow, Green), then the lowest compliance score. A risk level set by IAQA is marked <b>Set by IAQA</b>. Centres without a valid assessment are shown as <b>Not Assessed</b>, never as low risk.
         Thresholds: Green ≥ {settings.thresholds.green}%, Yellow ≥ {settings.thresholds.yellow}%, Red below {settings.thresholds.yellow}%.
         {from || to ? " Period filter applied: scores use the latest assessment within the selected period." : ""}
       </p>
