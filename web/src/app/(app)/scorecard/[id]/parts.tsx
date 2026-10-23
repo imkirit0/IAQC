@@ -39,21 +39,21 @@ export function ItemsTable({ items }: { items: Item[] }) {
               const head = n === 0 || shown[n - 1].section !== i.section ? i.section : null;
               return (
                 <Fragment key={i.id}>
-                  {head && <motion.tr layout className="group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><td colSpan={7}>{head}</td></motion.tr>}
+                  {head && <motion.tr layout className="group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><td data-l="" colSpan={7}>{head}</td></motion.tr>}
                   <motion.tr layout className={i.alert ? "alert-row" : ""} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
-                    <td style={{ minWidth: 240 }}>{i.text}{i.mandatory && <> <span className="chip mand">Mandatory</span></>}</td>
-                    <td><span className={`chip ${i.priority}`}>{i.priority}</span></td>
-                    <td className="right mono">{i.weight}</td>
-                    <td className="nowrap">{i.status ? <span className={`st-${i.status}`}>{STATUS_LABEL[i.status]}</span> : <span className="req">Unanswered</span>}</td>
-                    <td className="right mono nowrap">{i.points == null ? <span className="faint">excl.</span> : `${+i.points.toFixed(2)} / ${i.weight}`}</td>
-                    <td className="small">{i.remark || <span className="faint">—</span>}</td>
-                    <td>{i.alert ? <AlertTag n={1} /> : i.critical ? <span className="chip crit" title="Critical criterion">Critical item</span> : null}</td>
+                    <td data-l="Criterion" style={{ minWidth: 240 }}>{i.text}{i.mandatory && <> <span className="chip mand">Mandatory</span></>}</td>
+                    <td data-l="Priority"><span className={`chip ${i.priority}`}>{i.priority}</span></td>
+                    <td data-l="Weight" className="right mono">{i.weight}</td>
+                    <td data-l="Response" className="nowrap">{i.status ? <span className={`st-${i.status}`}>{STATUS_LABEL[i.status]}</span> : <span className="req">Unanswered</span>}</td>
+                    <td data-l="Points" className="right mono nowrap">{i.points == null ? <span className="faint">excl.</span> : `${+i.points.toFixed(2)} / ${i.weight}`}</td>
+                    <td data-l="Area Coordinator's remarks" className="small">{i.remark || <span className="faint">—</span>}</td>
+                    <td data-l="Flag">{i.alert ? <AlertTag n={1} /> : i.critical ? <span className="chip crit" title="Critical criterion">Critical item</span> : null}</td>
                   </motion.tr>
                 </Fragment>
               );
             })}
           </AnimatePresence>
-          {!shown.length && <tr><td colSpan={7} className="empty">No violations.</td></tr>}
+          {!shown.length && <tr><td data-l="" colSpan={7} className="empty">No violations.</td></tr>}
         </tbody>
       </table></div>
     </>

@@ -172,10 +172,12 @@ export async function getScorecard(centreId: number) {
 }
 
 export async function getUsers() {
-  const [ps, cs] = await Promise.all([db().from("profiles").select("id, username, name, role, area, active, created_at").order("role").order("name"), db().from("centres").select("id, code, name, ac_id")]);
+  const [ps, cs, au] = await Promise.all([db().from("profiles").select("id, username, name, role, area, active, created_at").order("role").order("name"), db().from("centres").select("id, code, name, ac_id"),
+    db().auth.admin.listUsers({ perPage: 1000 })]); // ponytail: single page of auth users; paginate past 1000 accounts
   const centres = must(cs) as { id: number; code: string; name: string; ac_id: string | null }[];
+  const district = new Map(au.data.users.map(u => [u.id, (u.app_metadata?.district as string) || null]));
   return (must(ps) as { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd"; area: string; active: boolean; created_at: string }[])
-    .map(u => ({ ...u, centres: centres.filter(c => c.ac_id === u.id) }));
+    .map(u => ({ ...u, district: district.get(u.id) ?? null, centres: centres.filter(c => c.ac_id === u.id) }));
 }
 
 export const AUDIT_PAGE_SIZE = 50;

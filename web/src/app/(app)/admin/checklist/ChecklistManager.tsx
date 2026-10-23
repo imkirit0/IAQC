@@ -45,17 +45,17 @@ export function ChecklistManager({ sections, version, weights }: { sections: Sec
             <thead><tr><th>#</th><th>Criterion</th><th>Priority</th><th className="right">Weight</th><th>Flags</th><th>Status</th><th /></tr></thead>
             <tbody>{s.criteria.length ? s.criteria.map(c => (
               <tr key={c.id} className={c.active ? "" : "inactive"}>
-                <td className="mono small">{c.sort}</td>
-                <td>{c.text}{c.description && <div className="small muted">{c.description}</div>}</td>
-                <td><span className={`chip ${c.priority}`}>{c.priority}</span></td><td className="right mono">{c.weight}</td>
-                <td>{c.critical && <span className="chip crit">Critical alert</span>} {c.mandatory && <span className="chip mand">Mandatory</span>}</td>
-                <td>{c.active ? "Active" : <span className="faint">Inactive</span>}</td>
-                <td className="nowrap right">
+                <td data-l="#" className="mono small">{c.sort}</td>
+                <td data-l="Criterion">{c.text}{c.description && <div className="small muted">{c.description}</div>}</td>
+                <td data-l="Priority"><span className={`chip ${c.priority}`}>{c.priority}</span></td><td data-l="Weight" className="right mono">{c.weight}</td>
+                <td data-l="Flags">{c.critical && <span className="chip crit">Critical alert</span>} {c.mandatory && <span className="chip mand">Mandatory</span>}</td>
+                <td data-l="Status">{c.active ? "Active" : <span className="faint">Inactive</span>}</td>
+                <td data-l="" className="nowrap right">
                   <button className="btn sm quiet" onClick={async () => { const r = await saveCriterion(c.id, critInput(c, !c.active)); if (r.error) toast(r.error, true); else done(c.active ? "Criterion deactivated" : "Criterion activated"); }}>{c.active ? "Deactivate" : "Activate"}</button>{" "}
                   <button className="btn sm" onClick={() => openCrit(c)}>Edit</button>
                 </td>
               </tr>
-            )) : <tr><td colSpan={7} className="empty">No criteria in this section yet.</td></tr>}</tbody>
+            )) : <tr><td data-l="" colSpan={7} className="empty">No criteria in this section yet.</td></tr>}</tbody>
           </table></div>
         </Reveal>
       ))}

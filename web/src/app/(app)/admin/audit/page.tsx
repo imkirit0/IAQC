@@ -22,8 +22,8 @@ async function AuditPage({ searchParams }: Props) {
       <Reveal className="card"><div className="tw"><table>
         <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Detail</th></tr></thead>
         <tbody>{log.map(l => (
-          <tr key={l.id}><td className="nowrap small">{fmtDT(l.at)}</td><td className="small">{l.username ?? "—"}</td>
-            <td><span className={`chip ${/DENIED|FAILED/.test(l.action) ? "Critical" : ""}`}>{l.action}</span></td><td className="small">{l.detail}</td></tr>
+          <tr key={l.id}><td data-l="Time" className="nowrap small">{fmtDT(l.at)}</td><td data-l="User" className="small">{l.username ?? "—"}</td>
+            <td data-l="Action"><span className={`chip ${/DENIED|FAILED/.test(l.action) ? "Critical" : ""}`}>{l.action}</span></td><td data-l="Detail" className="small">{l.detail}</td></tr>
         ))}</tbody>
       </table></div></Reveal>
       <nav className="row" aria-label="Audit log pages" style={{ justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>

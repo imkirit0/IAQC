@@ -65,16 +65,16 @@ export function RankingTable({ centres, from, to, defaultDir }: { centres: RankR
                   <motion.tr key={c.id} layout="position" className={c.alerts.length ? "alert-row" : ""}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0, transition: { duration: 0.35, delay: Math.min(i, 12) * 0.025 } }} exit={{ opacity: 0, transition: { duration: 0.12 } }}
                     transition={{ layout: { type: "spring", stiffness: 500, damping: 42 } }}>
-                    <td><span className="rank">{c.rank}</span></td>
-                    <td><Link href={`/scorecard/${c.id}`}><b>{c.name}</b></Link><div className="code">{c.code}</div></td>
-                    <td>{c.district}{c.location !== c.name && <div className="small faint">{c.location}</div>}</td>
-                    <td className="right"><span className="num" style={{ fontSize: 16 }}>{pct(c.score)}</span>
+                    <td data-l="Rank"><span className="rank">{c.rank}</span></td>
+                    <td data-l="Centre"><Link href={`/scorecard/${c.id}`}><b>{c.name}</b></Link><div className="code">{c.code}</div></td>
+                    <td data-l="ASO">{c.district}{c.location !== c.name && <div className="small faint">{c.location}</div>}</td>
+                    <td data-l="Compliance" className="right"><span className="num" style={{ fontSize: 16 }}>{pct(c.score)}</span>
                       {c.score != null && <><ScoreBar v={c.score} c={c.category} /><div className="small faint" style={{ marginTop: 3 }}>Risk {pct(c.risk)}</div></>}</td>
-                    <td><div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}><Badge c={c.category} />{c.override && <span className="set-by">Set by IAQA</span>}<AlertTag n={c.alerts.length} /></div></td>
-                    <td><TrendCell trend={c.trend} /></td>
-                    <td className="nowrap">{fmtDate(c.last_visit)}<div className={c.due ? "small" : "small faint"} style={c.due ? { color: "var(--amber)" } : undefined}>{c.days_since == null ? "Never visited" : c.days_since === 0 ? "Today" : `${c.days_since} day${c.days_since === 1 ? "" : "s"} ago`}</div></td>
-                    <td>{c.reported_by ?? c.ac_name ?? "—"}</td>
-                    <td className="right"><Link className="btn sm" href={`/scorecard/${c.id}`}>Scorecard</Link></td>
+                    <td data-l="Risk indicator"><div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}><Badge c={c.category} />{c.override && <span className="set-by">Set by IAQA</span>}<AlertTag n={c.alerts.length} /></div></td>
+                    <td data-l="Trend"><TrendCell trend={c.trend} /></td>
+                    <td data-l="Last assessed" className="nowrap">{fmtDate(c.last_visit)}<div className={c.due ? "small" : "small faint"} style={c.due ? { color: "var(--amber)" } : undefined}>{c.days_since == null ? "Never visited" : c.days_since === 0 ? "Today" : `${c.days_since} day${c.days_since === 1 ? "" : "s"} ago`}</div></td>
+                    <td data-l="Area Coordinator">{c.reported_by ?? c.ac_name ?? "—"}</td>
+                    <td data-l="" className="right"><Link className="btn sm" href={`/scorecard/${c.id}`}>Scorecard</Link></td>
                   </motion.tr>
                 ))}
               </AnimatePresence>

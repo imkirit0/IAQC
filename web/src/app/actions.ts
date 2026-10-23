@@ -144,7 +144,18 @@ async function assignCentres(uid: string, ids?: number[]) {
   if (ids.length) await ok(db().from("centres").update({ ac_id: uid }).in("id", ids));
 }
 
-export async function createUser(input: { username: string; name: string; area: string; password: string; centre_ids: number[] }) {
+/** ASO Director = read-only (cmd) account scoped to one district via app_metadata. Returns its district, or null. */
+async function asoDistrict(id: string): Promise<string | null> {
+  const { data } = await db().auth.admin.getUserById(id);
+  return (data.user?.app_metadata?.district as string) || null;
+}
+async function validDistrict(d: string) {
+  const { data } = await db().from("centres").select("district").ilike("district", d).limit(1);
+  check(data?.length, "Choose an ASO district that has centres.");
+  return data![0].district as string;
+}
+
+export async function createUser(input: { username: string; name: string; area: string; password: string; centre_ids: number[]; district?: string }) {
   return run(async () => {
     const me = await guard("iaqc");
     const username = clean(input.username, 60).toLowerCase();
@@ -153,21 +164,30 @@ export async function createUser(input: { username: string; name: string; area: 
     check(input.password.length >= 8, "Temporary password must be at least 8 characters.");
     const { data: dup } = await db().from("profiles").select("id").eq("username", username).maybeSingle();
     check(!dup, "That username is already taken.");
-    const created = await ok(db().auth.admin.createUser({ email: usernameToEmail(username), password: input.password, email_confirm: true }));
-    await ok(db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: "ac", area: clean(input.area, 100) }));
+    const district = input.district ? await validDistrict(clean(input.district, 80)) : null;
+    const created = await ok(db().auth.admin.createUser({ email: usernameToEmail(username), password: input.password, email_confirm: true, ...(district && { app_metadata: { district } }) }));
+    const p = await db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: district ? "cmd" : "ac", area: district ?? clean(input.area, 100) });
+    if (p.error) { await db().auth.admin.deleteUser(created.user!.id); throw new Error(p.error.message); }
+    if (district) return void await audit(me, "USER_CREATED", `${username} (ASO Director, ${district})`);
     await assignCentres(created.user!.id, input.centre_ids);
     await audit(me, "USER_CREATED", `${username} (Area Coordinator) centres=${input.centre_ids.join(",")}`);
   });
 }
 
-export async function updateUser(id: string, input: { name: string; area: string; active: boolean; centre_ids?: number[] }) {
+export async function updateUser(id: string, input: { name: string; area: string; active: boolean; centre_ids?: number[]; district?: string }) {
   return run(async () => {
     const me = await guard("iaqc");
     const { data: u } = await db().from("profiles").select("username, role").eq("id", id).maybeSingle();
-    check(u?.role === "ac", "Only Area Coordinator accounts can be managed here.");
+    const aso = u?.role === "cmd" && await asoDistrict(id);
+    check(u?.role === "ac" || aso, "Only Area Coordinator and ASO Director accounts can be managed here.");
     check(clean(input.name), "Full name is required.");
-    await ok(db().from("profiles").update({ name: clean(input.name, 100), area: clean(input.area, 100), active: input.active }).eq("id", id));
-    await assignCentres(id, input.centre_ids);
+    let area = clean(input.area, 100);
+    if (aso && input.district) {
+      area = await validDistrict(clean(input.district, 80));
+      await ok(db().auth.admin.updateUserById(id, { app_metadata: { district: area } }));
+    } else if (aso) area = aso;
+    await ok(db().from("profiles").update({ name: clean(input.name, 100), area, active: input.active }).eq("id", id));
+    if (!aso) await assignCentres(id, input.centre_ids);
     await audit(me, "USER_UPDATED", `${u!.username} active=${input.active}`);
   });
 }
@@ -177,7 +197,7 @@ export async function resetPassword(id: string, password: string) {
     const me = await guard("iaqc");
     check(password.length >= 8, "Temporary password must be at least 8 characters.");
     const { data: u } = await db().from("profiles").select("username, role").eq("id", id).maybeSingle();
-    check(u?.role === "ac", "Area Coordinator not found.");
+    check(u?.role === "ac" || (u?.role === "cmd" && await asoDistrict(id)), "Area Coordinator or ASO Director not found.");
     await ok(db().auth.admin.updateUserById(id, { password }));
     await audit(me, "PASSWORD_RESET", u!.username);
   });

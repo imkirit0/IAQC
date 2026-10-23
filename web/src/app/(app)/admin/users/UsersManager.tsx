@@ -9,7 +9,7 @@ import { useToast } from "@/components/Providers";
 import { PageHead } from "@/components/ui";
 import { initials } from "@/lib/format";
 
-type User = { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd"; area: string; active: boolean; centres: { id: number; code: string }[] };
+type User = { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd"; area: string; district: string | null; active: boolean; centres: { id: number; code: string }[] };
 type CentreLite = { id: number; code: string; name: string; district: string; ac_id: string | null; ac_name: string | null };
 const ROLE = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin" };
 const tempPassword = () => "Temp@" + Math.random().toString(36).slice(2, 8) + Math.floor(Math.random() * 90 + 10);
@@ -72,10 +72,18 @@ function AreaPicker({ centres, selected, owner }: { centres: CentreLite[]; selec
     </>
   );
 }
+function AsoSelect({ asos, value }: { asos: string[]; value?: string }) {
+  return (
+    <label className="f"><span>ASO district (sees only these centres, read-only)</span>
+      <select name="district" required defaultValue={value ?? ""}><option value="" disabled>Choose a district</option>{asos.map(a => <option key={a}>{a}</option>)}</select></label>
+  );
+}
 const pickedIds = (f: HTMLFormElement) => [...f.querySelectorAll<HTMLInputElement>("input[type=hidden][name=centre]")].map(i => Number(i.value));
 
 export function UsersManager({ users, centres }: { users: User[]; centres: CentreLite[] }) {
   const router = useRouter(), toast = useToast();
+  const [creatingAso, setCreatingAso] = useState(false), [editingAso, setEditingAso] = useState<User | null>(null);
+  const asos = [...new Set(centres.map(c => c.district))].sort();
   const [creating, setCreating] = useState(false), [editing, setEditing] = useState<User | null>(null), [resetting, setResetting] = useState<User | null>(null);
   const done = (msg: string) => { toast(msg); router.refresh(); };
 
@@ -87,21 +95,22 @@ export function UsersManager({ users, centres }: { users: User[]; centres: Centr
 
   return (
     <>
-      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. IAQA and CMD are fixed system accounts in this prototype.">
+      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors get read-only access to one district. IAQA and CMD are fixed system accounts.">
+        <button className="btn" onClick={() => setCreatingAso(true)}><Icon name="plus" />New ASO Director</button>
         <button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New Area Coordinator</button>
       </PageHead>
       <div className="card"><div className="tw"><table>
         <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Area</th><th>Assigned centres</th><th>Status</th><th /></tr></thead>
         <tbody>{users.map((u, i) => (
           <motion.tr key={u.id} className={u.active ? "" : "inactive"} initial={{ opacity: 0, y: 6 }} animate={{ opacity: u.active ? 1 : 0.55, y: 0 }} transition={{ delay: i * 0.03 }}>
-            <td><div className="row" style={{ gap: 10, flexWrap: "nowrap" }}><span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{initials(u.name)}</span><b>{u.name}</b></div></td>
-            <td className="muted">{u.username}</td><td>{ROLE[u.role]}</td><td className="small">{u.area}</td>
-            <td className="small">{u.role === "ac" ? (u.centres.map(c => c.code).join(", ") || <span className="faint">None</span>) : <span className="faint">All (role-based)</span>}</td>
-            <td>{u.active ? <span className="badge b-green">Active</span> : <span className="badge b-grey">Inactive</span>}</td>
-            <td className="nowrap right">{u.role === "ac" ? <>
+            <td data-l="Name"><div className="row" style={{ gap: 10, flexWrap: "nowrap" }}><span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{initials(u.name)}</span><b>{u.name}</b></div></td>
+            <td data-l="Username" className="muted">{u.username}</td><td data-l="Role">{u.district ? "ASO Director" : ROLE[u.role]}</td><td data-l="Area" className="small">{u.area}</td>
+            <td data-l="Assigned centres" className="small">{u.role === "ac" ? (u.centres.map(c => c.code).join(", ") || <span className="faint">None</span>) : <span className="faint">{u.district ? `All in ${u.district}` : "All (role-based)"}</span>}</td>
+            <td data-l="Status">{u.active ? <span className="badge b-green">Active</span> : <span className="badge b-grey">Inactive</span>}</td>
+            <td data-l="" className="nowrap right">{u.role === "ac" || u.district ? <>
               <button className="btn sm quiet" onClick={() => toggle(u)}>{u.active ? "Deactivate" : "Activate"}</button>{" "}
               <button className="btn sm" onClick={() => setResetting(u)}>Reset password</button>{" "}
-              <button className="btn sm" onClick={() => setEditing(u)}>Edit</button>
+              <button className="btn sm" onClick={() => u.district ? setEditingAso(u) : setEditing(u)}>Edit</button>
             </> : <span className="small faint">System account</span>}</td>
           </motion.tr>
         ))}</tbody>
@@ -131,6 +140,33 @@ export function UsersManager({ users, centres }: { users: User[]; centres: Centr
           <label className="f"><span>Full name</span><input name="name" required defaultValue={editing.name} /></label>
           <AreaPicker centres={centres} selected={editing.centres.map(c => c.id)} owner={editing.id} />
           <label className="check"><input type="checkbox" name="active" defaultChecked={editing.active} /> Active account</label>
+        </>}
+      </Modal>
+
+      <Modal open={creatingAso} onClose={() => setCreatingAso(false)} title="New ASO Director" submitLabel="Create account" onSubmit={async f => {
+        const v = formData(f);
+        const r = await createUser({ username: v.username, name: v.name, area: "", password: v.password, centre_ids: [], district: v.district });
+        if (r.error) return r.error;
+        done("ASO Director created");
+      }}>
+        <div className="grid2">
+          <label className="f"><span>Full name</span><input name="name" required /></label>
+          <label className="f"><span>Username</span><input name="username" required pattern="[A-Za-z0-9._]+" placeholder="e.g. aso.mlp" autoCapitalize="none" /></label>
+        </div>
+        <AsoSelect asos={asos} />
+        <label className="f"><span>Temporary password (share it securely)</span><input name="password" required minLength={8} defaultValue={creatingAso ? tempPassword() : ""} /></label>
+      </Modal>
+
+      <Modal open={!!editingAso} onClose={() => setEditingAso(null)} title="Edit ASO Director" onSubmit={async f => {
+        const v = formData(f);
+        const r = await updateUser(editingAso!.id, { name: v.name, area: "", active: v.active === "on", district: v.district });
+        if (r.error) return r.error;
+        done("User updated");
+      }}>
+        {editingAso && <>
+          <label className="f"><span>Full name</span><input name="name" required defaultValue={editingAso.name} /></label>
+          <AsoSelect asos={asos} value={editingAso.district ?? undefined} />
+          <label className="check"><input type="checkbox" name="active" defaultChecked={editingAso.active} /> Active account</label>
         </>}
       </Modal>
 

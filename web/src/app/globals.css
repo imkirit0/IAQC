@@ -500,3 +500,32 @@ td a b{white-space:nowrap}
 .levels .Red:has(input:checked){border-color:var(--red-mark);background:var(--red-soft)}
 .levels .computed:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .levels .Green b{color:var(--green)} .levels .Yellow b{color:var(--amber)} .levels .Red b{color:var(--red)}
+
+/* ================= Phones ================= */
+@media (max-width:900px){
+  input,select,textarea{font-size:16px} /* below 16px iOS zooms the page on focus */
+  .mast{position:static} /* two-row header would eat the screen; the visit form's progress bar sticks instead */
+  .sticky-prog{top:0}
+  .filters select,.filters input[type=date]{flex:1 1 140px;min-width:0}
+  .toasts{left:16px;right:16px;bottom:16px;align-items:stretch} .toast{max-width:none}
+  .modal-bg{padding:0;place-items:end stretch} .modal{max-width:none;max-height:92vh;border-radius:var(--r-lg) var(--r-lg) 0 0}
+  .modal .ft{position:sticky;bottom:0}
+  .ph{align-items:flex-start} .ph>.btn{flex:1 1 auto}
+}
+@media (pointer:coarse){ .btn{min-height:40px} .btn.sm{min-height:36px;padding:6px 12px} .steps button{min-height:38px} }
+/* tables become stacked cards; each cell's data-l (its column header) prints as a label */
+@media (max-width:700px){
+  .tw table,.tw tbody{display:block} .tw thead{display:none}
+  .tw tbody tr{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:dense;gap:12px 16px;padding:14px 16px;border-bottom:1px solid var(--rule)}
+  .tw tbody tr:last-child{border-bottom:0}
+  .tw td{display:block;padding:0;border:0;text-align:left!important;min-width:0!important;white-space:normal;background:none!important;box-shadow:none!important}
+  .tw td::before{content:attr(data-l);display:block;font:600 10.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+  .tw td[data-l=""]::before,.tw td:not([data-l])::before{display:none}
+  .tw td[colspan],.tw td[data-l=""],.tw td[data-l="Criterion"],.tw td[data-l="Reason"],.tw td[data-l="Detail"],.tw td[data-l="Area Coordinator's remarks"]{grid-column:1/-1}
+  .tw td .btn{width:100%} .tw td .btn+.btn{margin-top:8px}
+  .tw td.nowrap.right:has(.btn){display:flex;flex-wrap:wrap;gap:8px} .tw td.nowrap.right:has(.btn) .btn{flex:1 1 auto;width:auto;margin:0}
+  .tw tr.alert-row{background:var(--crit-soft)} .tw tr.group{background:var(--sunk);padding:8px 16px} .tw tr.total{border-top:1px solid var(--rule-2)}
+  .tw td.empty{padding:28px 0}
+  .score-cell{justify-content:flex-start}
+  td a b{white-space:normal}
+}

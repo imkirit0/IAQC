@@ -80,17 +80,17 @@ async function Overview() {
           <thead><tr><th>Centre</th><th>ASO</th><th className="right">Compliance</th><th>Indicator</th><th>Reason</th><th /></tr></thead>
           <tbody>{flagged.length ? flagged.map(c => (
             <tr key={c.id} className={c.alerts.length ? "alert-row" : ""}>
-              <td><Link href={`/scorecard/${c.id}`}><b>{c.name}</b></Link><div className="code">{c.code}</div></td>
-              <td>{c.district}</td><td className="right"><span className="num" style={{ fontSize: 16 }}>{pct(c.score)}</span></td><td><Badge c={c.category} /></td>
-              <td className="small">
+              <td data-l="Centre"><Link href={`/scorecard/${c.id}`}><b>{c.name}</b></Link><div className="code">{c.code}</div></td>
+              <td data-l="ASO">{c.district}</td><td data-l="Compliance" className="right"><span className="num" style={{ fontSize: 16 }}>{pct(c.score)}</span></td><td data-l="Indicator"><Badge c={c.category} /></td>
+              <td data-l="Reason" className="small">
                 {c.alerts.length > 0 && <div><AlertTag n={c.alerts.length} /> {c.alerts.map(a => a.text).join("; ")}</div>}
                 {c.category === "Red" && <div>{c.override ? `Risk level set to Red by IAQA: ${c.override.note}` : `Compliance below ${th.yellow}%`}</div>}
                 {(c.trend ?? 0) < 0 && <div>Compliance fell {Math.abs(c.trend!).toFixed(1)} pts since the previous visit</div>}
               </td>
-              <td className="right"><Link className="btn sm" href={`/scorecard/${c.id}`}>Scorecard</Link></td>
-            </tr>)) : !unassessed && <tr><td colSpan={6} className="empty">No centres currently require attention.</td></tr>}
-            {unassessed > 0 && <tr><td colSpan={5}><b>{unassessed} centre{unassessed === 1 ? "" : "s"} not yet assessed</b><div className="small faint">No assessment on record. Not treated as low risk.</div></td>
-              <td className="right"><Link className="btn sm" href="/ranking">View ranking</Link></td></tr>}</tbody>
+              <td data-l="" className="right"><Link className="btn sm" href={`/scorecard/${c.id}`}>Scorecard</Link></td>
+            </tr>)) : !unassessed && <tr><td data-l="" colSpan={6} className="empty">No centres currently require attention.</td></tr>}
+            {unassessed > 0 && <tr><td data-l="" colSpan={5}><b>{unassessed} centre{unassessed === 1 ? "" : "s"} not yet assessed</b><div className="small faint">No assessment on record. Not treated as low risk.</div></td>
+              <td data-l="" className="right"><Link className="btn sm" href="/ranking">View ranking</Link></td></tr>}</tbody>
         </table></div>
       </Reveal>
       <div className="cols mt">
@@ -98,8 +98,8 @@ async function Overview() {
           <div className="hd"><h2>Section-wise risk</h2><span className="small faint">average across latest assessments</span></div>
           <div className="tw"><table>
             <thead><tr><th>Section</th><th className="right">Average compliance</th><th className="right">Red</th><th className="right">Violations</th></tr></thead>
-            <tbody>{!secs.length && <tr><td colSpan={4} className="empty">No assessments submitted yet.</td></tr>}{secs.map(s => (
-              <tr key={s.name}><td>{s.name}</td><td className="right" style={{ width: "40%" }}><div className="score-cell"><ScoreBar v={s.avg} c={categoryOf(s.avg, th)} /><span className="num">{s.avg == null ? "—" : s.avg.toFixed(1) + "%"}</span></div></td><td className="right mono">{s.red}</td><td className="right mono">{s.viol}</td></tr>
+            <tbody>{!secs.length && <tr><td data-l="" colSpan={4} className="empty">No assessments submitted yet.</td></tr>}{secs.map(s => (
+              <tr key={s.name}><td data-l="Section">{s.name}</td><td data-l="Average compliance" className="right" style={{ width: "40%" }}><div className="score-cell"><ScoreBar v={s.avg} c={categoryOf(s.avg, th)} /><span className="num">{s.avg == null ? "—" : s.avg.toFixed(1) + "%"}</span></div></td><td data-l="Red" className="right mono">{s.red}</td><td data-l="Violations" className="right mono">{s.viol}</td></tr>
             ))}</tbody>
           </table></div>
         </Reveal>
@@ -108,7 +108,7 @@ async function Overview() {
           <div className="tw"><table>
             <thead><tr><th>ASO</th><th className="right">Centres</th><th className="right">Avg compliance</th><th className="right">Red</th><th className="right">Alerts</th></tr></thead>
             <tbody>{[...districts].sort(([a], [b]) => a.localeCompare(b)).map(([d, v]) => (
-              <tr key={d}><td>{d}</td><td className="right mono">{v.n}</td><td className="right mono">{v.k ? (v.s / v.k).toFixed(1) + "%" : "—"}</td><td className="right mono">{v.red}</td><td className="right mono">{v.alerts}</td></tr>
+              <tr key={d}><td data-l="ASO">{d}</td><td data-l="Centres" className="right mono">{v.n}</td><td data-l="Avg compliance" className="right mono">{v.k ? (v.s / v.k).toFixed(1) + "%" : "—"}</td><td data-l="Red" className="right mono">{v.red}</td><td data-l="Alerts" className="right mono">{v.alerts}</td></tr>
             ))}</tbody>
           </table></div>
         </Reveal>

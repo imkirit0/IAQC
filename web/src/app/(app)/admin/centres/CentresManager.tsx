@@ -42,18 +42,18 @@ export function CentresManager({ centres, acs }: { centres: Centre[]; acs: Ac[] 
           <thead><tr><th>Code</th><th>Centre</th><th>Location</th><th>ASO</th><th>Area Coordinator</th><th>Last visit</th><th>Status</th><th /></tr></thead>
           <tbody><AnimatePresence initial={false}>{rows.map(c => (
             <motion.tr key={c.id} layout="position" className={c.active ? "" : "inactive"} initial={{ opacity: 0 }} animate={{ opacity: c.active ? 1 : 0.55 }} exit={{ opacity: 0 }}>
-              <td className="code">{c.code}</td><td><b>{c.name}</b>{c.demo && <> <span className="chip">Demo</span></>}</td>
-              <td>{c.location}</td><td>{c.district}</td><td>{c.ac_name ?? <span className="faint">Unassigned</span>}</td>
-              <td className="nowrap">{fmtDate(c.last_visit)}</td>
-              <td>{c.active ? <span className="badge b-green">Active</span> : <span className="badge b-grey">Inactive</span>}</td>
-              <td className="nowrap right">
+              <td data-l="Code" className="code">{c.code}</td><td data-l="Centre"><b>{c.name}</b>{c.demo && <> <span className="chip">Demo</span></>}</td>
+              <td data-l="Location">{c.location}</td><td data-l="ASO">{c.district}</td><td data-l="Area Coordinator">{c.ac_name ?? <span className="faint">Unassigned</span>}</td>
+              <td data-l="Last visit" className="nowrap">{fmtDate(c.last_visit)}</td>
+              <td data-l="Status">{c.active ? <span className="badge b-green">Active</span> : <span className="badge b-grey">Inactive</span>}</td>
+              <td data-l="" className="nowrap right">
                 <button className="btn sm quiet" onClick={() => toggle(c)}>{c.active ? "Deactivate" : "Activate"}</button>{" "}
                 <button className="btn sm" onClick={() => setEditing(c)}>Edit</button>{" "}
                 <Link className="btn sm" href={`/scorecard/${c.id}`}>Scorecard</Link>
               </td>
             </motion.tr>
           ))}</AnimatePresence>
-          {!rows.length && <tr><td colSpan={8} className="empty"><b>No matching centres</b>Adjust the search or status filter.</td></tr>}</tbody>
+          {!rows.length && <tr><td data-l="" colSpan={8} className="empty"><b>No matching centres</b>Adjust the search or status filter.</td></tr>}</tbody>
         </table></div>
       </div>
 

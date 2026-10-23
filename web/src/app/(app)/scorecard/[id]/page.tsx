@@ -81,12 +81,12 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
                 <thead><tr><th>Section</th><th className="right">Earned</th><th className="right">Max</th><th className="right">Compliance</th><th>Indicator</th><th className="right">Violations</th></tr></thead>
                 <tbody>
                   {a.sections.map(s => (
-                    <tr key={s.id}><td>{s.name}</td><td className="right mono">{s.earned}</td><td className="right mono">{s.max}</td>
-                      <td className="right"><div className="score-cell"><ScoreBar v={s.score} c={s.category} /><span className="num">{pct(s.score)}</span></div></td>
-                      <td><Badge c={s.category} /></td><td className="right mono">{s.violations}</td></tr>
+                    <tr key={s.id}><td data-l="Section">{s.name}</td><td data-l="Earned" className="right mono">{s.earned}</td><td data-l="Max" className="right mono">{s.max}</td>
+                      <td data-l="Compliance" className="right"><div className="score-cell"><ScoreBar v={s.score} c={s.category} /><span className="num">{pct(s.score)}</span></div></td>
+                      <td data-l="Indicator"><Badge c={s.category} /></td><td data-l="Violations" className="right mono">{s.violations}</td></tr>
                   ))}
-                  <tr className="total"><td>Overall</td><td className="right mono">{a.earned}</td><td className="right mono">{a.max}</td>
-                    <td className="right"><div className="score-cell"><span className="num">{pct(a.score)}</span></div></td><td><Badge c={a.category} /></td><td className="right mono">{a.counts.N + a.counts.P}</td></tr>
+                  <tr className="total"><td data-l="Section">Overall</td><td data-l="Earned" className="right mono">{a.earned}</td><td data-l="Max" className="right mono">{a.max}</td>
+                    <td data-l="Compliance" className="right"><div className="score-cell"><span className="num">{pct(a.score)}</span></div></td><td data-l="Indicator"><Badge c={a.category} /></td><td data-l="Violations" className="right mono">{a.counts.N + a.counts.P}</td></tr>
                 </tbody>
               </table></div>
               <div className="formula">Compliance = earned ÷ applicable maximum × 100 = {a.earned} ÷ {a.max} × 100 = <b>{pct(a.score)}</b>. Risk = 100 − compliance = <b>{pct(a.risk)}</b>.{" "}

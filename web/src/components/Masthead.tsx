@@ -18,8 +18,9 @@ const NAV: Record<Role, [string, string, IconName][]> = {
 };
 const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin" };
 
-export function Masthead({ me }: { me: { name: string; username: string; role: Role } }) {
+export function Masthead({ me }: { me: { name: string; username: string; role: Role; district: string | null } }) {
   const path = usePathname();
+  const role = me.district ? `ASO Director, ${me.district}` : ROLE_LABEL[me.role];
   const [open, setOpen] = useState(false), [pw, setPw] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   // Scorecards belong to the ranking tab.
@@ -55,7 +56,7 @@ export function Masthead({ me }: { me: { name: string; username: string; role: R
           <div className={`user${open ? " open" : ""}`} ref={box}>
             <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
               <span className="avatar">{initials(me.name)}</span>
-              <span className="who"><b>{me.name}</b><span>{ROLE_LABEL[me.role]}</span></span>
+              <span className="who"><b>{me.name}</b><span>{role}</span></span>
               <motion.span animate={{ rotate: open ? 180 : 0 }} style={{ display: "inline-flex", color: "var(--ink-3)" }}><Icon name="chevron" size={14} /></motion.span>
             </button>
             <AnimatePresence>
@@ -63,7 +64,7 @@ export function Masthead({ me }: { me: { name: string; username: string; role: R
                 <motion.div className="menu" role="menu" style={{ display: "block", transformOrigin: "top right" }}
                   initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.12 } }}
                   transition={{ type: "spring", stiffness: 500, damping: 34 }}>
-                  <div className="head"><b>{me.name}</b><span>{ROLE_LABEL[me.role]} · {me.username}</span></div>
+                  <div className="head"><b>{me.name}</b><span>{role} · {me.username}</span></div>
                   <button className="item" role="menuitem" onClick={() => { setOpen(false); setPw(true); }}><Icon name="key" />Change password</button>
                   <form action={logout}><button className="item" role="menuitem"><Icon name="logout" />Sign out</button></form>
                   <div className="lbl">Appearance</div>
