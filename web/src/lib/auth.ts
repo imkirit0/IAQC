@@ -13,10 +13,9 @@ export const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: 
 export const getMe = cache(async (): Promise<Me | null> => {
   const { data } = await (await authClient()).auth.getUser();
   if (!data.user) return null;
-  // select("*"): works before migration 0003 adds `district`.
-  const { data: p } = await db().from("profiles").select("*").eq("id", data.user.id).maybeSingle();
+  const { data: p } = await db().from("profiles").select("id, username, name, role, active").eq("id", data.user.id).maybeSingle();
   if (!p || !p.active) return null;
-  return { id: p.id, username: p.username, name: p.name, role: p.role, district: p.district || null };
+  return { id: p.id, username: p.username, name: p.name, role: p.role, district: data.user.app_metadata?.district || null }; // set via the service key only
 });
 
 /** Pages: redirect away when not signed in or not permitted. */

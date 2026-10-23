@@ -52,9 +52,9 @@ async function main() {
 
   const uid: Record<string, string> = {};
   for (const u of S.users) {
-    const created = await q(sb.auth.admin.createUser({ email: email(u.username), password: u.password, email_confirm: true }));
+    const created = await q(sb.auth.admin.createUser({ email: email(u.username), password: u.password, email_confirm: true, ...(u.district && { app_metadata: { district: u.district } }) }));
     uid[u.username] = created.user!.id;
-    await q(sb.from("profiles").insert({ id: created.user!.id, username: u.username, name: u.name, role: u.role, area: u.area, ...(u.district && { district: u.district }) }));
+    await q(sb.from("profiles").insert({ id: created.user!.id, username: u.username, name: u.name, role: u.role, area: u.area }));
   }
   const cid: Record<string, number> = {};
   for (const c of S.centres) cid[c.code] = (await q(sb.from("centres").insert({ code: c.code, name: c.name, location: c.location, district: c.district, ac_id: uid[c.ac], demo: true }).select("id").single())).id;
