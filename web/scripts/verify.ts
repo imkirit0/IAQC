@@ -12,14 +12,14 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL!, pub = process.env.NEXT_PUBLIC
 assert(url && pub && secret, "Fill in .env.local first");
 const anon = createClient(url, pub), admin = createClient(url, secret, { auth: { persistSession: false } });
 
-// Reference results for the demo seed (G-TEC Checklist Criteria) (code → scores in visit order, "alerts" for the latest).
+// Reference results for the demo seed (G-TEC Operations/Academics criteria plus the four restored sections) (code → scores in visit order, "alerts" for the latest).
 const EXPECTED: Record<string, { scores: number[]; cat: string; alerts: number }> = {
-  "DEMO-EKM-01": { scores: [92.86, 89.05], cat: "Green", alerts: 1 }, "DEMO-EKM-02": { scores: [72.86, 66.67, 45.24], cat: "Red", alerts: 3 },
-  "DEMO-KKD-01": { scores: [64.76, 46.67], cat: "Red", alerts: 3 }, "DEMO-KLM-01": { scores: [95.71, 97.14], cat: "Green", alerts: 0 },
-  "DEMO-KLM-02": { scores: [100], cat: "Green", alerts: 0 }, "DEMO-MLP-01": { scores: [92.86, 97.14], cat: "Green", alerts: 0 },
-  "DEMO-MLP-02": { scores: [66.67, 72.86], cat: "Yellow", alerts: 0 }, "DEMO-TSR-01": { scores: [66.67], cat: "Red", alerts: 0 },
-  "DEMO-TSR-02": { scores: [98.1], cat: "Green", alerts: 0 }, "DEMO-TVM-01": { scores: [77.62, 80.48, 92.79], cat: "Green", alerts: 0 },
-  "DEMO-TVM-02": { scores: [76.19, 68.1], cat: "Red", alerts: 0 }, "DEMO-KKD-02": { scores: [], cat: "Not Assessed", alerts: 0 },
+  "DEMO-EKM-01": { scores: [93.57, 89.05], cat: "Green", alerts: 2 }, "DEMO-EKM-02": { scores: [74.29, 67.38, 50.95], cat: "Red", alerts: 3 },
+  "DEMO-KKD-01": { scores: [68.33, 52.62], cat: "Red", alerts: 3 }, "DEMO-KLM-01": { scores: [96.43, 97.86], cat: "Green", alerts: 0 },
+  "DEMO-KLM-02": { scores: [98.44], cat: "Green", alerts: 0 }, "DEMO-MLP-01": { scores: [93.57, 96.43], cat: "Green", alerts: 0 },
+  "DEMO-MLP-02": { scores: [69.05, 77.14], cat: "Yellow", alerts: 0 }, "DEMO-TSR-01": { scores: [71.19], cat: "Yellow", alerts: 0 },
+  "DEMO-TSR-02": { scores: [98.81], cat: "Green", alerts: 0 }, "DEMO-TVM-01": { scores: [83.1, 87.38, 94.95], cat: "Green", alerts: 0 },
+  "DEMO-TVM-02": { scores: [76.67, 70.48], cat: "Yellow", alerts: 0 }, "DEMO-KKD-02": { scores: [], cat: "Not Assessed", alerts: 0 },
 };
 
 async function main() {

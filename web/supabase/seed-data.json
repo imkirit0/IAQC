@@ -156,6 +156,180 @@
      "mandatory": 0
     }
    ]
+  },
+  {
+   "section": "Financial Transparency",
+   "criteria": [
+    {
+     "key": "fin.structure",
+     "text": "Student fees correspond with the approved fee structure.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "fin.extra",
+     "text": "No unauthorised additional charges are collected.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    },
+    {
+     "key": "fin.match",
+     "text": "Collection records match available student fee records.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 1
+    },
+    {
+     "key": "fin.pending",
+     "text": "Pending instalments and outstanding balances are properly documented.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "fin.discrep",
+     "text": "Financial discrepancies are reported and explained.",
+     "priority": "Critical",
+     "critical": 1,
+     "mandatory": 0
+    },
+    {
+     "key": "fin.royalty",
+     "text": "Applicable royalty and other payments are properly documented.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Marketing and Admissions",
+   "criteria": [
+    {
+     "key": "mkt.brand",
+     "text": "Marketing materials follow approved brand guidelines.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.logos",
+     "text": "Only authorised logos, advertisements, and promotional claims are used.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.claims",
+     "text": "Course details and certifications are accurately represented.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.admissions",
+     "text": "Admissions are recorded in the official system.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "mkt.commit",
+     "text": "Student fee commitments are clearly communicated.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "mkt.discounts",
+     "text": "Unauthorised discounts and promotional offers are not provided.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Brand and Policy Compliance",
+   "criteria": [
+    {
+     "key": "brand.agreement",
+     "text": "Centre follows the franchise agreement and applicable organisational policies.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 1
+    },
+    {
+     "key": "brand.premises",
+     "text": "Centre premises and signage meet approved brand standards.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "brand.identity",
+     "text": "Official identity and branding are used correctly.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "brand.unauth",
+     "text": "No unauthorised courses or services are promoted.",
+     "priority": "High",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "brand.comm",
+     "text": "Centre follows approved communication and reporting procedures.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
+  },
+  {
+   "section": "Student Satisfaction and Service Quality",
+   "criteria": [
+    {
+     "key": "stu.feedback",
+     "text": "Student feedback is collected where appropriate.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.complaints",
+     "text": "Student complaints are recorded and addressed.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.info",
+     "text": "Students receive accurate course and fee information.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.promised",
+     "text": "Students report that classes are conducted as promised.",
+     "priority": "Medium",
+     "critical": 0,
+     "mandatory": 0
+    },
+    {
+     "key": "stu.concerns",
+     "text": "Student concerns about fees, academics, or services are documented.",
+     "priority": "Low",
+     "critical": 0,
+     "mandatory": 0
+    }
+   ]
   }
  ],
  "users": [
@@ -341,6 +515,26 @@
      "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
      }
     },
     "general": "Generally well run; documentation gaps noted."
@@ -375,6 +569,18 @@
      "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
      }
     },
     "general": "Improvement noted in financial documentation."
@@ -395,6 +601,18 @@
       "remark": "Signboard faded; brand colours not as per guidelines."
      },
      "ops.feedbackqr": {
+      "status": "NA",
+      "remark": "Feedback cycle due next month."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "stu.feedback": {
       "status": "NA",
       "remark": "Feedback cycle due next month."
      }
@@ -441,6 +659,42 @@
      "ops.frontoffice": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": ""
@@ -487,6 +741,46 @@
      "acad.trainers": {
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     },
+     "mkt.commit": {
+      "status": "P",
+      "remark": "Instalment schedule not given in writing."
      }
     },
     "general": "Procedural gaps increasing since last visit."
@@ -507,6 +801,14 @@
      "ops.followup": {
       "status": "P",
       "remark": "Outstanding balances tracked in a separate spreadsheet only."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "fin.pending": {
+      "status": "P",
+      "remark": "Outstanding balances tracked in a separate spreadsheet only."
      }
     },
     "general": ""
@@ -519,6 +821,10 @@
       "remark": "Day Book entries made in pencil for two days."
      },
      "ops.frontoffice": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "stu.complaints": {
       "status": "P",
       "remark": "Complaints recorded but no action taken column filled."
      }
@@ -537,6 +843,18 @@
      "ops.feedbackqr": {
       "status": "NA",
       "remark": "First batch started only two weeks ago."
+     },
+     "fin.royalty": {
+      "status": "NA",
+      "remark": "Royalty holiday period for new franchise."
+     },
+     "stu.feedback": {
+      "status": "NA",
+      "remark": "First batch started only two weeks ago."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
      }
     },
     "general": "New centre; several items not yet applicable."
@@ -561,6 +879,18 @@
      "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
      }
     },
     "general": ""
@@ -573,6 +903,14 @@
       "remark": "Students in DCA batch reported paying an additional Rs 1,500 'exam registration' charge not in the approved fee structure. Reported for verification."
      },
      "acad.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "fin.extra": {
+      "status": "N",
+      "remark": "Students in DCA batch reported paying an additional Rs 1,500 'exam registration' charge not in the approved fee structure. Reported for verification."
+     },
+     "stu.info": {
       "status": "P",
       "remark": "Some students unclear about total course fee."
      }
@@ -619,6 +957,42 @@
      "acad.info": {
       "status": "P",
       "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": ""
@@ -661,6 +1035,46 @@
      "ops.systems": {
       "status": "P",
       "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "fin.match": {
+      "status": "P",
+      "remark": "Minor timing mismatches; 2 payments entered a week after collection."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": "Repeated gaps from previous visit."
@@ -711,6 +1125,50 @@
      "acad.monitoring": {
       "status": "P",
       "remark": "Attendance marked weekly instead of daily."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "N",
+      "remark": "Flat 40% 'referral' discount offered without approval."
+     },
+     "mkt.logos": {
+      "status": "N",
+      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
+     },
+     "stu.complaints": {
+      "status": "N",
+      "remark": "No complaint register maintained."
+     },
+     "fin.match": {
+      "status": "P",
+      "remark": "Minor timing mismatches; 2 payments entered a week after collection."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "brand.unauth": {
+      "status": "N",
+      "remark": "Unapproved 'mobile repair' course promoted under the brand."
+     },
+     "fin.pending": {
+      "status": "P",
+      "remark": "Outstanding balances tracked in a separate spreadsheet only."
      }
     },
     "general": "Significant deterioration. Recommend management meeting with franchisee."
@@ -759,6 +1217,42 @@
      "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "mkt.claims": {
+      "status": "N",
+      "remark": "Flyers advertise 'government-recognised diploma' for a short-term course."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
+     },
+     "mkt.commit": {
+      "status": "P",
+      "remark": "Instalment schedule not given in writing."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
      }
     },
     "general": "Marketing claims need correction."
@@ -773,6 +1267,10 @@
       "remark": ""
      },
      "ops.feedbackqr": {
+      "status": "P",
+      "remark": ""
+     },
+     "stu.feedback": {
       "status": "P",
       "remark": ""
      }
@@ -819,6 +1317,38 @@
      "acad.trainers": {
       "status": "P",
       "remark": "One trainer awaiting authorisation is taking classes independently."
+     },
+     "fin.discrep": {
+      "status": "N",
+      "remark": "Shortfall of approx. Rs 18,000 between day book and system collections; no explanation provided."
+     },
+     "mkt.admissions": {
+      "status": "P",
+      "remark": "3 of 25 admissions not yet entered in the official system."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
      }
     },
     "general": ""
@@ -861,6 +1391,46 @@
      "ops.frontoffice": {
       "status": "N",
       "remark": "No complaint register maintained."
+     },
+     "mkt.admissions": {
+      "status": "N",
+      "remark": "Walk-in admissions recorded only in a notebook."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "brand.unauth": {
+      "status": "N",
+      "remark": "Unapproved 'mobile repair' course promoted under the brand."
+     },
+     "mkt.claims": {
+      "status": "N",
+      "remark": "Flyers advertise 'government-recognised diploma' for a short-term course."
+     },
+     "mkt.discounts": {
+      "status": "N",
+      "remark": "Flat 40% 'referral' discount offered without approval."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "stu.complaints": {
+      "status": "N",
+      "remark": "No complaint register maintained."
+     },
+     "mkt.logos": {
+      "status": "N",
+      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
+     },
+     "stu.promised": {
+      "status": "P",
+      "remark": "Students reported frequent class cancellations last month."
      }
     },
     "general": "Serious academic irregularities observed. Escalated to IAQC."
@@ -886,6 +1456,18 @@
      "ops.followup": {
       "status": "P",
       "remark": "Outstanding balances tracked in a separate spreadsheet only."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "fin.pending": {
+      "status": "P",
+      "remark": "Outstanding balances tracked in a separate spreadsheet only."
      }
     },
     "general": ""
@@ -900,6 +1482,14 @@
      "ops.infra": {
       "status": "P",
       "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "brand.premises": {
+      "status": "P",
+      "remark": "Signboard faded; brand colours not as per guidelines."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
      }
     },
     "general": ""
@@ -944,6 +1534,42 @@
      "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "fin.royalty": {
+      "status": "N",
+      "remark": "Royalty statements for the last two months not available."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "mkt.claims": {
+      "status": "P",
+      "remark": "Brochure lists a certification body not linked to the course."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "brand.agreement": {
+      "status": "P",
+      "remark": "Franchise agreement copy not displayed; renewal pending."
+     },
+     "mkt.logos": {
+      "status": "N",
+      "remark": "Social media ads use an unapproved logo variant and the claim '100% placement guaranteed'."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": ""
@@ -986,6 +1612,38 @@
      "ops.systems": {
       "status": "P",
       "remark": "Some files kept off-site; produced after 30 minutes."
+     },
+     "fin.royalty": {
+      "status": "P",
+      "remark": "Royalty for August paid late; supporting statement not filed."
+     },
+     "mkt.discounts": {
+      "status": "P",
+      "remark": "Festival discount offered without Head Office approval."
+     },
+     "stu.info": {
+      "status": "P",
+      "remark": "Some students unclear about total course fee."
+     },
+     "mkt.commit": {
+      "status": "P",
+      "remark": "Instalment schedule not given in writing."
+     },
+     "mkt.logos": {
+      "status": "P",
+      "remark": "Old logo still used on wall posters at the entrance."
+     },
+     "fin.structure": {
+      "status": "P",
+      "remark": "Two batches charged Rs 500 above approved structure, described as 'lab fee'."
+     },
+     "stu.complaints": {
+      "status": "P",
+      "remark": "Complaints recorded but no action taken column filled."
+     },
+     "brand.unauth": {
+      "status": "P",
+      "remark": "Spoken English classes promoted alongside approved courses without approval."
      }
     },
     "general": "Improvement from previous visit; follow-up needed."
