@@ -5,7 +5,7 @@ import { useStorageValue } from "@/lib/client";
 import { Icon } from "@/components/Icon";
 import { fmtDate, fmtDT } from "@/lib/format";
 
-type Last = { reference?: string; centre?: string; date?: string; submitted_at?: string };
+type Last = { id?: number; reference?: string; centre?: string; centre_id?: number; date?: string; submitted_at?: string; located?: boolean };
 
 export default function Done() {
   const raw = useStorageValue(() => sessionStorage.getItem("rds-last") ?? "");
@@ -24,8 +24,12 @@ export default function Done() {
         <dl className="info-list" style={{ maxWidth: 340, margin: "26px auto", textAlign: "left", padding: "16px 0", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)" }}>
           <dt>Reference</dt><dd>{r.reference ?? "—"}</dd><dt>Centre</dt><dd>{r.centre ?? "—"}</dd>
           <dt>Visit date</dt><dd>{fmtDate(r.date)}</dd><dt>Submitted</dt><dd>{fmtDT(r.submitted_at)}</dd>
+          <dt>Location</dt><dd>{r.located == null ? "—" : r.located ? "Recorded" : "Not captured (reason recorded)"}</dd>
         </dl>
-        <Link className="btn primary" href="/visits"><Icon name="left" />Back to my centres</Link>
+        <div className="row" style={{ justifyContent: "center" }}>
+          <Link className="btn primary" href="/visits"><Icon name="left" />Back to my centres</Link>
+          {r.centre_id && r.id && <Link className="btn" href={`/support/new?centre=${r.centre_id}&visit=${r.id}`}><Icon name="inbox" />Request support for this centre</Link>}
+        </div>
       </div></div>
     </div>
   );

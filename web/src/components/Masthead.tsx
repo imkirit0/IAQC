@@ -9,18 +9,20 @@ import { ChangePassword } from "./ChangePassword";
 import { logout } from "@/app/actions";
 import { initials } from "@/lib/format";
 
-type Role = "ac" | "iaqc" | "cmd";
+type Role = "ac" | "iaqc" | "cmd" | "dept";
 const NAV: Record<Role, [string, string, IconName][]> = {
-  iaqc: [["/ranking", "Risk ranking", "dash"], ["/assessments", "Assessments", "list"], ["/admin/centres", "Centres", "centre"], ["/admin/users", "Users", "users"],
-         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Scoring", "sliders"], ["/admin/audit", "Audit log", "log"]],
-  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"]],
-  ac: [["/visits", "My centres", "centre"]],
+  iaqc: [["/ranking", "Risk ranking", "dash"], ["/assessments", "Assessments", "list"], ["/support", "Support", "inbox"], ["/admin/centres", "Centres", "centre"], ["/admin/users", "Users", "users"],
+         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"]],
+  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"]],
+  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"]],
+  dept: [["/support", "Assigned requests", "inbox"]],
 };
-const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin" };
+const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin", dept: "Department In-Charge" };
 
-export function Masthead({ me }: { me: { name: string; username: string; role: Role; district: string | null } }) {
+/** inbox = support requests waiting on this user (overdue ones, for CMD), shown as a count on the Support tab. */
+export function Masthead({ me, inbox }: { me: { name: string; username: string; role: Role; district: string | null; department: string | null }; inbox: number }) {
   const path = usePathname();
-  const role = me.district ? `ASO Director, ${me.district}` : ROLE_LABEL[me.role];
+  const role = me.district ? `ASO Director, ${me.district}` : me.department ? `${me.department} In-Charge` : ROLE_LABEL[me.role];
   const [open, setOpen] = useState(false), [pw, setPw] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   // Scorecards belong to the ranking tab.
@@ -45,7 +47,7 @@ export function Masthead({ me }: { me: { name: string; username: string; role: R
         <nav className="nav" aria-label="Main">
           {NAV[me.role].map(([href, label, icon]) => (
             <Link key={href} href={href} className={active(href) ? "on" : ""} aria-current={active(href) ? "page" : undefined}>
-              <Icon name={icon} />{label}
+              <Icon name={icon} />{label}{href === "/support" && inbox > 0 && <span className="count" title={`${inbox} need attention`}>{inbox}</span>}
               {active(href) && <motion.span layoutId="nav-ind" className="nav-ind" transition={{ type: "spring", stiffness: 480, damping: 40 }} />}
             </Link>
           ))}

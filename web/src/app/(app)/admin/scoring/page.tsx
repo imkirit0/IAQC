@@ -4,15 +4,16 @@ import { requireRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
 import { PageHead, Reveal } from "@/components/ui";
 import { ScoringForm } from "./ScoringForm";
+import { SupportSettings } from "./SupportSettings";
 
-export const metadata = { title: "Scoring rules" };
+export const metadata = { title: "Settings" };
 
 async function ScoringPage() {
   await requireRole("iaqc");
   const st = await getSettings();
   return (
     <>
-      <PageHead title="Scoring rules" sub="Thresholds and weights apply to future assessments. Submitted reports keep the rules they were scored with." />
+      <PageHead title="Settings" sub="Thresholds and weights apply to future assessments. Submitted reports keep the rules they were scored with." />
       <div className="cols">
         <ScoringForm st={st} />
         <Reveal delay={0.1} className="card">
@@ -32,6 +33,7 @@ async function ScoringPage() {
           </div>
         </Reveal>
       </div>
+      <SupportSettings st={st} />
     </>
   );
 }

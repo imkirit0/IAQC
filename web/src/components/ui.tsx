@@ -3,7 +3,9 @@
 import { animate, motion, useInView, useMotionValue, useTransform } from "motion/react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Icon } from "./Icon";
-import { CAT_CLASS, CAT_LABEL, catColor, pct } from "@/lib/format";
+import { CAT_CLASS, CAT_LABEL, catColor, fmtDT, pct } from "@/lib/format";
+import { fmtDistance } from "@/lib/support";
+import type { VisitLocation } from "@/lib/data";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -13,6 +15,20 @@ export const Badge = ({ c, bare }: { c: string; bare?: boolean }) =>
 export const AlertTag = ({ n }: { n: number }) => n ? (
   <span className="alert" title="Reported critical violation, pending verification"><Icon name="alert" />{n > 1 ? `${n} ` : ""}Critical</span>
 ) : null;
+
+/** Where the coordinator was when submitting. Coordinates support a review; they do not by themselves prove a visit. */
+export function LocationNote({ loc }: { loc: VisitLocation | null }) {
+  if (!loc) return <span className="faint">Not recorded (submitted before location capture)</span>;
+  if (loc.status === "unavailable") return <><span className="chip">Unverified</span> <span className="small muted">Not captured: {loc.reason}</span></>;
+  return (
+    <>
+      <span className="chip ok">GPS recorded</span>{" "}
+      <a href={`https://www.google.com/maps?q=${loc.lat},${loc.lng}`} target="_blank" rel="noreferrer">{loc.lat!.toFixed(5)}, {loc.lng!.toFixed(5)}</a>
+      <span className="small faint"> · ±{loc.accuracy ?? "?"} m · {fmtDT(loc.at)}</span>
+      {loc.dist != null && <div className={`small ${loc.flagged ? "late" : "muted"}`}>{fmtDistance(loc.dist)} from the registered centre location{loc.flagged ? ": flagged for review" : ""}</div>}
+    </>
+  );
+}
 
 export function PageHead({ title, sub, back, children }: { title: ReactNode; sub?: ReactNode; back?: ReactNode; children?: ReactNode }) {
   return (

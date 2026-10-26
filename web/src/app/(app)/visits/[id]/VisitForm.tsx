@@ -15,14 +15,29 @@ type CentreInfo = { id: number; name: string; code: string; location: string; di
 const OPTIONS: Status[] = ["C", "P", "N", "NA"];
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Props = { userId: string; centre: CentreInfo; snap: Snapshot };
+type Props = { userId: string; centre: CentreInfo; snap: Snapshot; gpsRequired: boolean };
+type Fix = { lat: number; lng: number; accuracy: number | null; at: string };
+
+/** One fresh fix from the device at submission time (no background tracking). */
+function locate(): Promise<Fix> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error("This browser cannot provide a location."));
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy ?? null, at: new Date(p.timestamp).toISOString() }),
+      e => reject(new Error(e.code === 1 ? "Location permission was denied. Allow location for this site in your browser settings, then try again."
+        : e.code === 3 ? "Finding your location took too long. Move to an open area and try again."
+        : "Your location is unavailable. Check that location services are switched on, then try again.")),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 },
+    );
+  });
+}
 
 // The draft lives in browser storage, so the form renders only after hydration.
 export function VisitForm(props: Props) {
   return useHydrated() ? <Form {...props} /> : <div className="ac-wrap"><div className="skel" style={{ height: 40, width: 320, marginBottom: 16 }} /><div className="skel" style={{ height: 420 }} /></div>;
 }
 
-function Form({ userId, centre, snap }: Props) {
+function Form({ userId, centre, snap, gpsRequired }: Props) {
   const router = useRouter(), toast = useToast();
   const key = draftKey(userId, centre.id);
   const secs = snap.sections, crits = useMemo(() => secs.flatMap(s => s.criteria), [secs]);
@@ -31,7 +46,7 @@ function Form({ userId, centre, snap }: Props) {
     const base: Draft = loadDraft(key) ?? { version: snap.version, date: today(), responses: {}, general: "", step: 0 };
     return base.version === snap.version ? base : { ...base, version: snap.version, changed: true, step: 0 };
   });
-  const [dirn, setDirn] = useState(1), [busy, setBusy] = useState(false);
+  const [dirn, setDirn] = useState(1), [busy, setBusy] = useState(false), [locErr, setLocErr] = useState(""), [reason, setReason] = useState("");
   useEffect(() => saveDraft(key, d), [d, key]);
 
   const answered = (c: SnapCriterion) => {
@@ -43,9 +58,14 @@ function Form({ userId, centre, snap }: Props) {
   const go = (step: number) => { setDirn(step > d.step ? 1 : -1); setD({ ...d, step }); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const setResp = (id: number, patch: { status?: Status; remark?: string }) => setD({ ...d, responses: { ...d.responses, [id]: { ...d.responses[id], ...patch } } });
 
-  async function submit() {
+  async function submit(withoutLocation = false) {
     setBusy(true);
-    const r = await submitAssessment({ centre_id: centre.id, visit_date: d.date, responses: d.responses, general_remarks: d.general, checklist_version: d.version });
+    let gps: Fix | null = null;
+    if (!withoutLocation) {
+      try { gps = await locate(); setLocErr(""); }
+      catch (e) { setBusy(false); setLocErr((e as Error).message); return; }
+    }
+    const r = await submitAssessment({ centre_id: centre.id, visit_date: d.date, responses: d.responses, general_remarks: d.general, checklist_version: d.version, gps, gps_reason: withoutLocation ? reason : undefined });
     setBusy(false);
     if (r.error) {
       toast(r.error, true);
@@ -53,7 +73,7 @@ function Form({ userId, centre, snap }: Props) {
       return;
     }
     dropDraft(key);
-    try { sessionStorage.setItem("rds-last", JSON.stringify({ ...r.data, centre: centre.name, code: centre.code, date: d.date })); } catch { /* ignore */ }
+    try { sessionStorage.setItem("rds-last", JSON.stringify({ ...r.data, centre: centre.name, centre_id: centre.id, code: centre.code, date: d.date, located: !!gps })); } catch { /* ignore */ }
     router.push("/visits/done");
   }
 
@@ -172,9 +192,16 @@ function Form({ userId, centre, snap }: Props) {
             </div>
           ))}
           <label className="f mt"><span>General remarks (optional)</span><textarea value={d.general} onChange={e => setD({ ...d!, general: e.target.value })} /></label>
+          {locErr ? (
+            <div className="banner warn"><Icon name="alert" /><div><b>Your location was not captured.</b> {locErr}
+              {!gpsRequired && <label className="f" style={{ margin: "12px 0 0" }}><span>Or submit without location. The report will be marked location unverified. Reason</span>
+                <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g. no GPS signal inside the building" /></label>}
+            </div></div>
+          ) : <p className="small muted row" style={{ gap: 6 }}><Icon name="pin" />Your current location is recorded with the report when you submit{gpsRequired ? ", and is required" : ""}.</p>}
           <div className="row">
             <span className="small faint">Once submitted, this report is final and cannot be edited.</span><span className="spacer" />
-            <button className={`btn primary${busy ? " loading" : ""}`} disabled={!!missing.length || busy} onClick={submit}>Submit visit report</button>
+            {locErr && !gpsRequired && <button className="btn" disabled={!!missing.length || busy || !reason.trim()} onClick={() => submit(true)}>Submit without location</button>}
+            <button className={`btn primary${busy ? " loading" : ""}`} disabled={!!missing.length || busy} onClick={() => submit()}>{locErr ? "Try location again and submit" : "Submit visit report"}</button>
           </div>
         </div>
       </div>

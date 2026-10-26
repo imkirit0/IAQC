@@ -201,6 +201,22 @@
    "role": "ac",
    "password": "Rahul@Demo2026",
    "area": "Kozhikode, Malappuram"
+  },
+  {
+   "username": "academics",
+   "name": "Academics In-Charge (Demo)",
+   "role": "dept",
+   "password": "Academics@Demo2026",
+   "area": "Academics",
+   "department": "Academics"
+  },
+  {
+   "username": "marketing",
+   "name": "Marketing In-Charge (Demo)",
+   "role": "dept",
+   "password": "Marketing@Demo2026",
+   "area": "Marketing",
+   "department": "Marketing"
   }
  ],
  "centres": [

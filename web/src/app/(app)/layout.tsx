@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getMe } from "@/lib/auth";
+import { supportInbox } from "@/lib/data";
 import { Masthead } from "@/components/Masthead";
 import Loading from "./loading";
 
@@ -19,7 +20,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app">
       <a className="skip" href="#main">Skip to content</a>
-      <Masthead me={me} />
+      <Masthead me={me} inbox={await supportInbox(me)} />
       <main className="main" id="main" tabIndex={-1}><div className="content"><Suspense fallback={<Loading />}>{children}</Suspense></div></main>
     </div>
   );

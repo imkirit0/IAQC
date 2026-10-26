@@ -1,18 +1,30 @@
 import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
+import type { Me } from "./auth";
+import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
-export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number };
+export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
+  departments: string[]; support_verification: boolean; gps_required: boolean; gps_flag_m: number };
 export const DEFAULT_SETTINGS: Settings = {
   thresholds: { green: 85, yellow: 70 }, factors: { C: 100, P: 50, N: 0 },
   priority_weights: { Critical: 10, High: 6, Medium: 3, Low: 1 }, visit_cycle_days: 60, checklist_version: 1,
+  departments: DEFAULT_DEPARTMENTS, support_verification: true, gps_required: false, gps_flag_m: 500,
 };
 
-export type Centre = { id: number; code: string; name: string; location: string; district: string; ac_id: string | null; active: boolean; demo: boolean; ac_name?: string | null; last_visit?: string | null };
+export type Centre = { id: number; code: string; name: string; location: string; district: string; ac_id: string | null; active: boolean; demo: boolean; lat: number | null; lng: number | null; ac_name?: string | null; last_visit?: string | null };
 export type Criterion = { id: number; section_id: number; text: string; description: string; priority: Priority; weight: number; critical: boolean; mandatory: boolean; active: boolean; sort: number };
 export type Section = { id: number; name: string; sort: number; active: boolean; criteria: Criterion[] };
-type AssessmentRow = { id: number; centre_id: number; ac_id: string; visit_date: string; submitted_at: string; checklist_version: number; snapshot: Snapshot; responses: Responses; general_remarks: string; demo: boolean };
+type AssessmentRow = { id: number; centre_id: number; ac_id: string; visit_date: string; submitted_at: string; checklist_version: number; snapshot: Snapshot; responses: Responses; general_remarks: string; demo: boolean } & Gps;
+export type Gps = { gps_status: "verified" | "unavailable" | null; gps_lat: number | null; gps_lng: number | null; gps_accuracy: number | null; gps_at: string | null; gps_reason: string | null };
+/** Visit location as shown to IAQA / CMD: distance from the registered centre point, flagged past the configured threshold. */
+export function visitLocation(a: Gps, c: { lat: number | null; lng: number | null }, flagM: number) {
+  if (!a.gps_status) return null; // reports submitted before location capture existed
+  const dist = a.gps_status === "verified" && c.lat != null && c.lng != null ? distanceM({ lat: a.gps_lat!, lng: a.gps_lng! }, { lat: c.lat, lng: c.lng }) : null;
+  return { status: a.gps_status, lat: a.gps_lat, lng: a.gps_lng, accuracy: a.gps_accuracy, at: a.gps_at, reason: a.gps_reason, dist, flagged: dist != null && dist > flagM };
+}
+export type VisitLocation = NonNullable<ReturnType<typeof visitLocation>>;
 export type Override = { category: "Green" | "Yellow" | "Red"; note: string; at: string; by: string };
 export type Summary = Omit<Result, "items" | "thresholds" | "factors"> & { id: number; centre_id: number; ac_id: string; ac_name: string; visit_date: string; submitted_at: string; checklist_version: number; computed_category: Category; override: Override | null };
 export type Review = { id: number; assessment_id: number; criterion_id: number | null; user_id: string; at: string; outcome: string; note: string; corrected_status: string | null; set_category: string | null; reviewer?: string };
@@ -124,16 +136,16 @@ export async function getRanking(from?: string, to?: string, district?: string |
 }
 
 export async function listAssessments(district?: string | null) {
-  const [rows, centres, names] = await Promise.all([db().from("assessments").select("*").order("visit_date", { ascending: false }).order("id", { ascending: false }), getCentres({ district }), profileNames()]);
+  const [rows, centres, names, st] = await Promise.all([db().from("assessments").select("*").order("visit_date", { ascending: false }).order("id", { ascending: false }), getCentres({ district }), profileNames(), getSettings()]);
   const byId = new Map(centres.map(c => [c.id, c])), list = (must(rows) as AssessmentRow[]).filter(a => byId.has(a.centre_id));
   const ovr = await overrides(list.map(a => a.id), names);
   return list.map(a => {
     const c = byId.get(a.centre_id)!;
-    return { ...summarise(a, names, ovr), centre_name: c.name, code: c.code, district: c.district };
+    return { ...summarise(a, names, ovr), centre_name: c.name, code: c.code, district: c.district, location: visitLocation(a, c, st.gps_flag_m) };
   });
 }
 
-export type AssessmentDetail = Omit<Result & Summary, "alerts"> & { general_remarks: string; reviews: Review[]; alerts: (Alert & { verification: string })[] };
+export type AssessmentDetail = Omit<Result & Summary, "alerts"> & { general_remarks: string; reviews: Review[]; alerts: (Alert & { verification: string })[]; gps: Gps };
 
 export async function getAssessment(id: number): Promise<AssessmentDetail | null> {
   const a = must(await db().from("assessments").select("*").eq("id", id).maybeSingle()) as AssessmentRow | null;
@@ -145,6 +157,7 @@ export async function getAssessment(id: number): Promise<AssessmentDetail | null
   const sum = summarise(a, names, ovr);
   return {
     ...full, ...sum, general_remarks: a.general_remarks, reviews,
+    gps: { gps_status: a.gps_status, gps_lat: a.gps_lat, gps_lng: a.gps_lng, gps_accuracy: a.gps_accuracy, gps_at: a.gps_at, gps_reason: a.gps_reason },
     alerts: full.alerts.map(al => ({ ...al, verification: states.get(`${id}:${al.criterion_id}`) ?? PENDING })),
   };
 }
@@ -172,11 +185,11 @@ export async function getScorecard(centreId: number) {
 }
 
 export async function getUsers() {
-  const [ps, cs, au] = await Promise.all([db().from("profiles").select("id, username, name, role, area, active, created_at").order("role").order("name"), db().from("centres").select("id, code, name, ac_id"),
+  const [ps, cs, au] = await Promise.all([db().from("profiles").select("id, username, name, role, area, active, created_at, department").order("role").order("name"), db().from("centres").select("id, code, name, ac_id"),
     db().auth.admin.listUsers({ perPage: 1000 })]); // ponytail: single page of auth users; paginate past 1000 accounts
   const centres = must(cs) as { id: number; code: string; name: string; ac_id: string | null }[];
   const district = new Map(au.data.users.map(u => [u.id, (u.app_metadata?.district as string) || null]));
-  return (must(ps) as { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd"; area: string; active: boolean; created_at: string }[])
+  return (must(ps) as { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd" | "dept"; area: string; active: boolean; created_at: string; department: string | null }[])
     .map(u => ({ ...u, district: district.get(u.id) ?? null, centres: centres.filter(c => c.ac_id === u.id) }));
 }
 
@@ -186,4 +199,73 @@ export async function getAudit(page = 1) {
   const from = (page - 1) * AUDIT_PAGE_SIZE;
   const r = await db().from("audit_log").select("*", { count: "exact" }).order("id", { ascending: false }).range(from, from + AUDIT_PAGE_SIZE - 1);
   return { log: must(r) as { id: number; at: string; username: string | null; action: string; detail: string }[], total: r.count ?? 0 };
+}
+
+// ---------- support requests ----------
+
+export type SupportRow = {
+  id: number; requester_id: string; centre_id: number; assessment_id: number | null; department: string; category: string; title: string; remarks: string;
+  priority: string; preferred_date: string | null; status: string; resume_status: string | null; assigned_department: string | null; assignee_id: string | null;
+  assigned_at: string | null; response_due: string | null; completion_due: string | null; responded_at: string | null; accepted_at: string | null;
+  estimated_completion: string | null; delivered_at: string | null; delivery: Record<string, string> | null; verified_at: string | null; verified_by: string | null;
+  created_at: string; updated_at: string;
+};
+export type SupportEvent = { id: number; request_id: number; at: string; user_id: string | null; actor: string; action: string; from_status: string | null; to_status: string | null; note: string; data: Record<string, unknown> | null; by?: string };
+export type SupportItem = SupportRow & ReturnType<typeof lateness> & { requester: string; requester_role: string; assignee: string | null; centre_name: string; centre_code: string; district: string; reassigned: number };
+
+/** What this user may do on a request: requester of their own, IAQA everywhere, a department in-charge on its department's requests. */
+export function actorsOn(me: Me, r: Pick<SupportRow, "requester_id" | "assigned_department" | "assignee_id">): Actor[] {
+  const a: Actor[] = [];
+  if (r.requester_id === me.id) a.push("requester");
+  if (me.role === "iaqc") a.push("iaqc");
+  if (me.role === "dept" && (r.assignee_id === me.id || (!!me.department && r.assigned_department === me.department))) a.push("dept");
+  return a;
+}
+/** IAQA and CMD (not district ASO accounts) monitor every request; everyone else only those they act on. */
+export const canSeeRequest = (me: Me, r: SupportRow) => me.role === "iaqc" || (me.role === "cmd" && !me.district) || actorsOn(me, r).length > 0;
+
+async function enrich(rows: SupportRow[], reassigns: Map<number, number> = new Map()): Promise<SupportItem[]> {
+  const [ps, cs] = await Promise.all([db().from("profiles").select("id, name, role"), db().from("centres").select("id, name, code, district")]);
+  const people = new Map((must(ps) as { id: string; name: string; role: string }[]).map(p => [p.id, p]));
+  const centres = new Map((must(cs) as { id: number; name: string; code: string; district: string }[]).map(c => [c.id, c]));
+  await connection(); // overdue depends on the current time
+  const now = Date.now();
+  return rows.map(r => {
+    const p = people.get(r.requester_id), c = centres.get(r.centre_id);
+    return { ...r, ...lateness(r, now), requester: p?.name ?? "—", requester_role: p?.role === "ac" ? "Area Coordinator" : "ASO Director",
+      assignee: r.assignee_id ? people.get(r.assignee_id)?.name ?? "—" : null, centre_name: c?.name ?? "—", centre_code: c?.code ?? "", district: c?.district ?? "", reassigned: reassigns.get(r.id) ?? 0 };
+  });
+}
+
+// ponytail: loads every request and filters in code; move the visibility filter into the query past a few thousand requests.
+export async function getSupportRequests(me: Me): Promise<SupportItem[]> {
+  const [rs, ev] = await Promise.all([db().from("support_requests").select("*").order("id", { ascending: false }), db().from("support_events").select("request_id").eq("action", "reassign")]);
+  const reassigns = new Map<number, number>();
+  (must(ev) as { request_id: number }[]).forEach(e => reassigns.set(e.request_id, (reassigns.get(e.request_id) ?? 0) + 1));
+  return enrich((must(rs) as SupportRow[]).filter(r => canSeeRequest(me, r)), reassigns);
+}
+
+/** Null when it does not exist or this user may not see it (no difference shown, so IDs cannot be probed). */
+export async function getSupportRequest(me: Me, id: number) {
+  const r = must(await db().from("support_requests").select("*").eq("id", id).maybeSingle()) as SupportRow | null;
+  if (!r || !canSeeRequest(me, r)) return null;
+  const [names, ev] = await Promise.all([profileNames(), db().from("support_events").select("*").eq("request_id", id).order("id")]);
+  const events = (must(ev) as SupportEvent[]).map(e => ({ ...e, by: e.user_id ? names.get(e.user_id) ?? "—" : "System" }));
+  const [item] = await enrich([r], new Map([[id, events.filter(e => e.action === "reassign").length]]));
+  return { ...item, events, actors: actorsOn(me, r), names };
+}
+
+export async function getDeptUsers() {
+  const rs = must(await db().from("profiles").select("id, name, department, active").eq("role", "dept").eq("active", true).order("name")) as { id: string; name: string; department: string | null }[];
+  return rs;
+}
+
+/** Requests waiting on this user: the masthead count is the in-app notification. Monitoring (CMD) counts overdue ones. */
+export async function supportInbox(me: Me) {
+  const rs = await getSupportRequests(me);
+  const n = (f: (r: SupportItem) => boolean) => rs.filter(f).length;
+  if (me.role === "iaqc") return n(r => ["Submitted", "Under Review", "Rejected", "Completed - Awaiting Verification"].includes(r.status) || r.overdue);
+  if (me.role === "dept") return n(r => r.status === "Assigned" || r.overdue);
+  if (me.role === "cmd" && !me.district) return n(r => r.overdue);
+  return n(r => r.status === "Awaiting Clarification");
 }

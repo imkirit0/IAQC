@@ -25,7 +25,10 @@ export function CentreCards({ userId, centres }: { userId: string; centres: C[] 
               <h2 style={{ margin: "4px 0 6px" }}>{c.name}</h2>
               <div className="small muted" style={{ marginBottom: 14 }}>{c.location}, {c.district}<br />Last visit {fmtDate(c.last_visit)}</div>
               {draft && <span className="draft">Draft in progress</span>}
-              <Link className={`btn ${draft ? "" : "primary"}`} href={`/visits/${c.id}`}>{draft ? "Continue report" : "Start visit report"}<Icon name="right" /></Link>
+              <div className="row" style={{ gap: 8 }}>
+                <Link className={`btn ${draft ? "" : "primary"}`} href={`/visits/${c.id}`}>{draft ? "Continue report" : "Start visit report"}<Icon name="right" /></Link>
+                <Link className="btn quiet" href={`/support/new?centre=${c.id}`}>Request support</Link>
+              </div>
             </div>
           </motion.div>
         );

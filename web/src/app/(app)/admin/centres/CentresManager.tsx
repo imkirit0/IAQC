@@ -11,6 +11,7 @@ import { useToast } from "@/components/Providers";
 import { PageHead } from "@/components/ui";
 import { fmtDate } from "@/lib/format";
 
+const num = (v: string) => (v.trim() === "" ? null : Number(v));
 type Ac = { id: string; name: string; username: string; active: boolean };
 
 export function CentresManager({ centres, acs }: { centres: Centre[]; acs: Ac[] }) {
@@ -22,7 +23,7 @@ export function CentresManager({ centres, acs }: { centres: Centre[]; acs: Ac[] 
   const districts = [...new Set(centres.map(c => c.district))];
 
   async function toggle(c: Centre) {
-    const r = await saveCentre(c.id, { code: c.code, name: c.name, location: c.location, district: c.district, ac_id: c.ac_id, active: !c.active });
+    const r = await saveCentre(c.id, { code: c.code, name: c.name, location: c.location, district: c.district, ac_id: c.ac_id, active: !c.active, lat: c.lat, lng: c.lng });
     if (r.error) return toast(r.error, true);
     toast(c.active ? "Centre deactivated" : "Centre activated"); router.refresh();
   }
@@ -60,7 +61,7 @@ export function CentresManager({ centres, acs }: { centres: Centre[]; acs: Ac[] 
       <Modal open={!!editing} onClose={() => setEditing(null)} title={editing?.id ? "Edit centre" : "Add centre"} submitLabel={editing?.id ? "Save changes" : "Create centre"}
         onSubmit={async f => {
           const v = formData(f);
-          const r = await saveCentre(editing?.id ?? null, { code: v.code, name: v.name, location: v.location, district: v.district, ac_id: v.ac_id || null, active: v.active === "on" });
+          const r = await saveCentre(editing?.id ?? null, { code: v.code, name: v.name, location: v.location, district: v.district, ac_id: v.ac_id || null, active: v.active === "on", lat: num(v.lat), lng: num(v.lng) });
           if (r.error) return r.error;
           toast(editing?.id ? "Centre updated" : "Centre created"); router.refresh();
         }}>
@@ -72,6 +73,11 @@ export function CentresManager({ centres, acs }: { centres: Centre[]; acs: Ac[] 
             <label className="f"><span>ASO</span><input name="district" required defaultValue={editing.district} list="dlist" />
               <datalist id="dlist">{districts.map(d => <option key={d} value={d} />)}</datalist></label>
           </div>
+          <div className="grid2">
+            <label className="f"><span>Latitude (optional)</span><input name="lat" type="number" step="any" min="-90" max="90" defaultValue={editing.lat ?? ""} placeholder="e.g. 11.0510" /></label>
+            <label className="f"><span>Longitude (optional)</span><input name="lng" type="number" step="any" min="-180" max="180" defaultValue={editing.lng ?? ""} placeholder="e.g. 76.0711" /></label>
+          </div>
+          <p className="small faint" style={{ marginTop: -6 }}>Registered centre location. Visit reports show how far from it the coordinator submitted.</p>
           <label className="f"><span>Assigned Area Coordinator</span><select name="ac_id" defaultValue={editing.ac_id ?? ""}>
             <option value="">Unassigned</option>
             {acs.map(u => <option key={u.id} value={u.id} disabled={!u.active}>{u.name} ({u.username}){u.active ? "" : " (inactive)"}</option>)}

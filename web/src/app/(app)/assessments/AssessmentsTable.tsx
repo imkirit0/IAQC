@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 import { AlertTag, Badge } from "@/components/ui";
 import { fmtDate, pct, ref } from "@/lib/format";
 
-type Row = { id: number; centre_id: number; centre_name: string; code: string; district: string; ac_name: string; visit_date: string; score: number | null; category: string; alerts: number; assessed: number; na: number; version: number; override: boolean };
+type Row = { id: number; centre_id: number; centre_name: string; code: string; district: string; ac_name: string; visit_date: string; score: number | null; category: string; alerts: number; assessed: number; na: number; version: number; override: boolean; location: { status: string; flagged: boolean } | null };
 
 export function AssessmentsTable({ list }: { list: Row[] }) {
   const [q, setQ] = useState(""), [cat, setCat] = useState(""), [crit, setCrit] = useState(false);
@@ -22,7 +22,7 @@ export function AssessmentsTable({ list }: { list: Row[] }) {
       </div>
       <div className="tw">{rows.length ? (
         <table>
-          <thead><tr><th>Ref</th><th>Visit date</th><th>Centre</th><th>ASO</th><th>Area Coordinator</th><th className="right">Compliance</th><th>Indicator</th><th>Alert</th><th className="right">Assessed / N/A</th><th>Checklist</th><th /></tr></thead>
+          <thead><tr><th>Ref</th><th>Visit date</th><th>Centre</th><th>ASO</th><th>Area Coordinator</th><th className="right">Compliance</th><th>Indicator</th><th>Alert</th><th className="right">Assessed / N/A</th><th>Checklist</th><th>Location</th><th /></tr></thead>
           <tbody><AnimatePresence initial={false}>{rows.map((a, i) => (
             <motion.tr key={a.id} layout="position" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: Math.min(i, 15) * 0.015 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
               <td data-l="Ref" className="code nowrap">{ref(a.id)}</td><td data-l="Visit date" className="nowrap">{fmtDate(a.visit_date)}</td>
@@ -31,6 +31,8 @@ export function AssessmentsTable({ list }: { list: Row[] }) {
               <td data-l="Compliance" className="right"><span className="num" style={{ fontSize: 15 }}>{pct(a.score)}</span></td>
               <td data-l="Indicator"><Badge c={a.category} />{a.override && <div className="set-by">Set by IAQA</div>}</td><td data-l="Alert"><AlertTag n={a.alerts} /></td>
               <td data-l="Assessed / N/A" className="right mono">{a.assessed} / {a.na}</td><td data-l="Checklist" className="small">v{a.version}</td>
+              <td data-l="Location" className="small nowrap">{!a.location ? <span className="faint">—</span> : a.location.status === "verified"
+                ? <><span className="chip ok">GPS</span>{a.location.flagged && <div className="late">Far from centre</div>}</> : <span className="chip">Unverified</span>}</td>
               <td data-l="" className="right"><Link className="btn sm" href={`/scorecard/${a.centre_id}?a=${a.id}`}>Open</Link></td>
             </motion.tr>
           ))}</AnimatePresence></tbody>

@@ -1,9 +1,10 @@
 "use server";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { audit, Forbidden, guard, HOME, usernameToEmail } from "@/lib/auth";
+import { audit, canRequest, Forbidden, guard, HOME, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { getSettings, makeSnapshot } from "@/lib/data";
+import { actorsOn, getSettings, makeSnapshot, type SupportRow } from "@/lib/data";
+import { ACTIONS, CATEGORIES, can, nextStatus, SR_PRIORITIES, srRef, type ActionName } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
 export type Result = { ok?: true; error?: string; data?: Record<string, unknown> };
@@ -64,7 +65,7 @@ export async function logout() {
 
 export async function changePassword(current: string, next: string) {
   return run(async () => {
-    const me = await guard("ac", "iaqc", "cmd");
+    const me = await guard("ac", "iaqc", "cmd", "dept");
     check(next.length >= 8, "New password must be at least 8 characters.");
     const { error } = await (await authClient()).auth.signInWithPassword({ email: usernameToEmail(me.username), password: current });
     check(!error, "Current password is incorrect.");
@@ -123,11 +124,14 @@ export async function saveCriterion(id: number | null, input: { section_id: numb
 
 // ---------- centres & users ----------
 
-export async function saveCentre(id: number | null, input: { code: string; name: string; location: string; district: string; ac_id: string | null; active: boolean }) {
+export async function saveCentre(id: number | null, input: { code: string; name: string; location: string; district: string; ac_id: string | null; active: boolean; lat: number | null; lng: number | null }) {
   return run(async () => {
     const me = await guard("iaqc");
-    const row = { code: clean(input.code, 30).toUpperCase(), name: clean(input.name, 150), location: clean(input.location, 150), district: clean(input.district, 80), ac_id: input.ac_id || null, active: input.active };
+    const row = { code: clean(input.code, 30).toUpperCase(), name: clean(input.name, 150), location: clean(input.location, 150), district: clean(input.district, 80), ac_id: input.ac_id || null, active: input.active,
+      lat: input.lat ?? null, lng: input.lng ?? null };
     check(row.code && row.name && row.location && row.district, "Code, name, location and district are required.");
+    check((row.lat == null) === (row.lng == null), "Enter both latitude and longitude, or neither.");
+    check(row.lat == null || (Math.abs(row.lat) <= 90 && Math.abs(row.lng!) <= 180), "Latitude must be within ±90 and longitude within ±180.");
     if (row.ac_id) {
       const { data } = await db().from("profiles").select("role").eq("id", row.ac_id).maybeSingle();
       check(data?.role === "ac", "Assigned user must be an Area Coordinator.");
@@ -155,7 +159,13 @@ async function validDistrict(d: string) {
   return data![0].district as string;
 }
 
-export async function createUser(input: { username: string; name: string; area: string; password: string; centre_ids: number[]; district?: string }) {
+async function validDepartment(d: string) {
+  const dep = (await getSettings()).departments.find(x => x.toLowerCase() === d.trim().toLowerCase());
+  check(dep, "Choose a department.");
+  return dep;
+}
+
+export async function createUser(input: { username: string; name: string; area: string; password: string; centre_ids: number[]; district?: string; department?: string }) {
   return run(async () => {
     const me = await guard("iaqc");
     const username = clean(input.username, 60).toLowerCase();
@@ -165,22 +175,29 @@ export async function createUser(input: { username: string; name: string; area: 
     const { data: dup } = await db().from("profiles").select("id").eq("username", username).maybeSingle();
     check(!dup, "That username is already taken.");
     const district = input.district ? await validDistrict(clean(input.district, 80)) : null;
+    const department = input.department ? await validDepartment(input.department) : null;
     const created = await ok(db().auth.admin.createUser({ email: usernameToEmail(username), password: input.password, email_confirm: true, ...(district && { app_metadata: { district } }) }));
-    const p = await db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: district ? "cmd" : "ac", area: district ?? clean(input.area, 100) });
+    const p = await db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: department ? "dept" : district ? "cmd" : "ac", area: department ?? district ?? clean(input.area, 100), department });
     if (p.error) { await db().auth.admin.deleteUser(created.user!.id); throw new Error(p.error.message); }
+    if (department) return void await audit(me, "USER_CREATED", `${username} (Department In-Charge, ${department})`);
     if (district) return void await audit(me, "USER_CREATED", `${username} (ASO Director, ${district})`);
     await assignCentres(created.user!.id, input.centre_ids);
     await audit(me, "USER_CREATED", `${username} (Area Coordinator) centres=${input.centre_ids.join(",")}`);
   });
 }
 
-export async function updateUser(id: string, input: { name: string; area: string; active: boolean; centre_ids?: number[]; district?: string }) {
+export async function updateUser(id: string, input: { name: string; area: string; active: boolean; centre_ids?: number[]; district?: string; department?: string }) {
   return run(async () => {
     const me = await guard("iaqc");
-    const { data: u } = await db().from("profiles").select("username, role").eq("id", id).maybeSingle();
-    const aso = u?.role === "cmd" && await asoDistrict(id);
-    check(u?.role === "ac" || aso, "Only Area Coordinator and ASO Director accounts can be managed here.");
+    const { data: u } = await db().from("profiles").select("username, role, department").eq("id", id).maybeSingle();
     check(clean(input.name), "Full name is required.");
+    if (u?.role === "dept") {
+      const department = input.department ? await validDepartment(input.department) : u.department;
+      await ok(db().from("profiles").update({ name: clean(input.name, 100), area: department, department, active: input.active }).eq("id", id));
+      return void await audit(me, "USER_UPDATED", `${u.username} department=${department} active=${input.active}`);
+    }
+    const aso = u?.role === "cmd" && await asoDistrict(id);
+    check(u?.role === "ac" || aso, "Only Area Coordinator, ASO Director and Department In-Charge accounts can be managed here.");
     let area = clean(input.area, 100);
     if (aso && input.district) {
       area = await validDistrict(clean(input.district, 80));
@@ -197,7 +214,7 @@ export async function resetPassword(id: string, password: string) {
     const me = await guard("iaqc");
     check(password.length >= 8, "Temporary password must be at least 8 characters.");
     const { data: u } = await db().from("profiles").select("username, role").eq("id", id).maybeSingle();
-    check(u?.role === "ac" || (u?.role === "cmd" && await asoDistrict(id)), "Area Coordinator or ASO Director not found.");
+    check(u?.role === "ac" || u?.role === "dept" || (u?.role === "cmd" && await asoDistrict(id)), "Account not found.");
     await ok(db().auth.admin.updateUserById(id, { password }));
     await audit(me, "PASSWORD_RESET", u!.username);
   });
@@ -218,13 +235,28 @@ export async function setRiskLevel(assessmentId: number, input: { category: stri
 
 // ---------- assessments ----------
 
-export async function submitAssessment(input: { centre_id: number; visit_date: string; responses: Responses; general_remarks: string; checklist_version: number }) {
+type GpsFix = { lat: number; lng: number; accuracy: number | null; at: string };
+const GPS_MAX_AGE_MS = 10 * 60e3;
+
+export async function submitAssessment(input: { centre_id: number; visit_date: string; responses: Responses; general_remarks: string; checklist_version: number; gps: GpsFix | null; gps_reason?: string }) {
   return run(async () => {
     const me = await guard("ac");
     const { data: c } = await db().from("centres").select("id, code, ac_id, active").eq("id", input.centre_id).maybeSingle();
     check(c && c.active && c.ac_id === me.id, "This centre is not assigned to you.");
     const vd = new Date(input.visit_date + "T00:00:00"), today = new Date(new Date().toDateString());
     check(!isNaN(+vd) && vd <= today && (+today - +vd) / 864e5 <= 60, "Visit date must be within the last 60 days and not in the future.");
+    // Location: verified only with a real, recent device fix; never substituted with the centre's registered point.
+    const g = input.gps, st = await getSettings(), age = g ? Date.now() - Date.parse(g.at) : NaN;
+    let gps: Record<string, unknown>;
+    if (g) {
+      check(Number.isFinite(g.lat) && Number.isFinite(g.lng) && Math.abs(g.lat) <= 90 && Math.abs(g.lng) <= 180 && (g.accuracy == null || (Number.isFinite(g.accuracy) && g.accuracy >= 0)), "The captured location is invalid. Capture it again.");
+      check(age > -120e3 && age < GPS_MAX_AGE_MS, "The captured location is out of date. Capture it again.");
+      gps = { gps_status: "verified", gps_lat: g.lat, gps_lng: g.lng, gps_accuracy: g.accuracy == null ? null : Math.round(g.accuracy), gps_at: new Date(g.at).toISOString(), gps_reason: null };
+    } else {
+      check(!st.gps_required, "Your current location is required to submit this report. Allow location access and try again.");
+      check(clean(input.gps_reason), "Explain why your location could not be captured.");
+      gps = { gps_status: "unavailable", gps_reason: clean(input.gps_reason, 500) };
+    }
     const snap = await makeSnapshot();
     check(input.checklist_version === snap.version, "The checklist was updated while you were filling it in. Reload and review your answers.");
     const errs = validateResponses(snap, input.responses ?? {});
@@ -232,9 +264,9 @@ export async function submitAssessment(input: { centre_id: number; visit_date: s
     const ids = new Set(snap.sections.flatMap(s => s.criteria.map(x => String(x.id))));
     const responses = Object.fromEntries(Object.entries(input.responses).filter(([k]) => ids.has(k)).map(([k, v]) => [k, { status: v.status, remark: clean(v.remark, 2000) }]));
     const row = await ok(db().from("assessments").insert({
-      centre_id: c!.id, ac_id: me.id, visit_date: input.visit_date, checklist_version: snap.version, snapshot: snap, responses, general_remarks: clean(input.general_remarks, 3000),
+      centre_id: c!.id, ac_id: me.id, visit_date: input.visit_date, checklist_version: snap.version, snapshot: snap, responses, general_remarks: clean(input.general_remarks, 3000), ...gps,
     }).select("id, submitted_at").single());
-    await audit(me, "ASSESSMENT_SUBMITTED", `#${row.id} ${c!.code} visit=${input.visit_date}`);
+    await audit(me, "ASSESSMENT_SUBMITTED", `#${row.id} ${c!.code} visit=${input.visit_date} location=${gps.gps_status}`);
     return { ok: true, data: { id: row.id, submitted_at: row.submitted_at, reference: `IAQA-${String(row.id).padStart(5, "0")}` } };
   });
 }
@@ -247,5 +279,127 @@ export async function addReview(assessmentId: number, input: { criterion_id: num
     check(!input.corrected_status || (STATUSES as string[]).includes(input.corrected_status), "Invalid corrected status.");
     await ok(db().from("reviews").insert({ assessment_id: assessmentId, criterion_id: input.criterion_id, user_id: me.id, outcome: input.outcome, note: clean(input.note, 2000), corrected_status: input.corrected_status || null }));
     await audit(me, "REVIEW_ADDED", `assessment #${assessmentId} criterion=${input.criterion_id ?? "-"} ${input.outcome}`);
+  });
+}
+
+// ---------- support requests ----------
+
+export async function saveSupportSettings(input: { departments: string[]; verification: boolean; gps_required: boolean; gps_flag_m: number }) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const departments = [...new Set(input.departments.map(d => clean(d, 60)).filter(Boolean))];
+    check(departments.length && departments.length <= 30, "List between 1 and 30 departments.");
+    check(Number.isFinite(input.gps_flag_m) && input.gps_flag_m >= 10 && input.gps_flag_m <= 100000, "Distance threshold must be between 10 and 100,000 metres.");
+    const value = { departments, support_verification: !!input.verification, gps_required: !!input.gps_required, gps_flag_m: Math.round(input.gps_flag_m) };
+    await ok(db().from("settings").upsert(Object.entries(value).map(([key, v]) => ({ key, value: v }))));
+    await audit(me, "SETTINGS_UPDATED", JSON.stringify(value));
+  });
+}
+
+async function srEvent(me: Me, id: number, actor: string, action: string, from: string | null, to: string | null, note: string, data: Record<string, unknown> | null = null) {
+  await ok(db().from("support_events").insert({ request_id: id, user_id: me.id, actor, action, from_status: from, to_status: to, note, data }));
+}
+
+export async function createSupportRequest(input: { centre_id: number; assessment_id: number | null; department: string; category: string; title: string; remarks: string; priority: string; preferred_date: string }) {
+  return run(async () => {
+    const me = await guard("ac", "cmd");
+    check(canRequest(me), "Only Area Coordinators and ASO Directors can raise support requests.");
+    const { data: c } = await db().from("centres").select("id, code, ac_id, district, active").eq("id", input.centre_id).maybeSingle();
+    check(c?.active && (me.role === "ac" ? c.ac_id === me.id : c.district.toLowerCase() === me.district!.toLowerCase()), "Choose one of your centres.");
+    let assessment_id: number | null = null;
+    if (input.assessment_id) {
+      const { data: a } = await db().from("assessments").select("id, centre_id, ac_id").eq("id", input.assessment_id).maybeSingle();
+      check(a && a.centre_id === c.id && (me.role !== "ac" || a.ac_id === me.id), "The linked visit report does not belong to this centre.");
+      assessment_id = a.id;
+    }
+    const department = (await getSettings()).departments.find(d => d === input.department);
+    check(department, "Choose a department.");
+    check(CATEGORIES.includes(input.category), "Choose a support category.");
+    check((SR_PRIORITIES as readonly string[]).includes(input.priority), "Choose a priority.");
+    const title = clean(input.title, 120), remarks = clean(input.remarks, 4000), preferred_date = input.preferred_date || null;
+    check(title, "Give the request a short title.");
+    check(remarks.length >= 20, "Describe the support needed, why, and the expected outcome (at least 20 characters).");
+    check(!preferred_date || (/^\d{4}-\d{2}-\d{2}$/.test(preferred_date) && !isNaN(Date.parse(preferred_date))), "Preferred date is invalid.");
+    const row = await ok(db().from("support_requests").insert({ requester_id: me.id, centre_id: c.id, assessment_id, department, category: input.category, title, remarks, priority: input.priority, preferred_date })
+      .select("id").single());
+    await srEvent(me, row.id, "requester", "create", null, "Submitted", remarks, { centre: c.code, department, category: input.category, title, priority: input.priority, preferred_date, assessment_id });
+    await audit(me, "SUPPORT_REQUEST_CREATED", `${srRef(row.id)} ${c.code} ${department}`);
+    return { ok: true, data: { id: row.id, reference: srRef(row.id) } };
+  });
+}
+
+export type SupportInput = {
+  note?: string; department?: string; assignee_id?: string; response_due?: string; completion_due?: string; estimated_completion?: string;
+  delivery?: { date?: string; description?: string; topic?: string; mode?: string; participants?: string; outcome?: string };
+};
+
+/** Every workflow step goes through here: the role/status rules in lib/support.ts decide, the history row records it. */
+export async function supportAction(id: number, action: ActionName, input: SupportInput = {}) {
+  return run(async () => {
+    const me = await guard("ac", "cmd", "iaqc", "dept");
+    check(Object.hasOwn(ACTIONS, action), "Unknown action.");
+    const r = await ok(db().from("support_requests").select("*").eq("id", id).maybeSingle()) as SupportRow | null;
+    const actors = r ? actorsOn(me, r) : [];
+    if (!r || !can(action, actors, r.status)) {
+      await audit(me, "ACCESS_DENIED", `support ${action} on #${id}`);
+      throw new Forbidden("This action is not available for this request.");
+    }
+    const def: { by: readonly string[]; reason?: boolean } = ACTIONS[action];
+    const note = clean(input.note, 3000), st = await getSettings(), now = new Date().toISOString();
+    const actor = def.by.find(a => (actors as string[]).includes(a))!;
+    check(!def.reason || note, "A reason or note is required for this action.");
+    const to = nextStatus(action, r.status, { resume: r.resume_status, verification: st.support_verification });
+    const patch: Record<string, unknown> = { status: to };
+    let data: Record<string, unknown> | null = null;
+    const iso = (v: string | undefined, label: string) => { const t = v ? Date.parse(v) : NaN; check(Number.isFinite(t), `Set the ${label}.`); return new Date(t).toISOString(); };
+
+    if (action === "assign" || action === "reassign" || action === "deadlines") {
+      if (action !== "deadlines") {
+        const department = st.departments.find(d => d === input.department);
+        check(department, "Choose a department.");
+        let assignee: string | null = null;
+        if (input.assignee_id) {
+          const { data: u } = await db().from("profiles").select("id, role, department, active").eq("id", input.assignee_id).maybeSingle();
+          check(u?.role === "dept" && u.active && u.department === department, "Choose an active in-charge of that department.");
+          assignee = u.id;
+        }
+        // A new assignment starts the department's response and delivery afresh.
+        Object.assign(patch, { assigned_department: department, assignee_id: assignee, assigned_at: now, responded_at: null, accepted_at: null, delivered_at: null, resume_status: null });
+      }
+      const response_due = iso(input.response_due, "response deadline"), completion_due = input.completion_due ? iso(input.completion_due, "completion deadline") : null;
+      check(action === "deadlines" || Date.parse(response_due) > Date.now(), "The response deadline must be in the future.");
+      check(!completion_due || completion_due >= response_due, "The completion deadline cannot be before the response deadline.");
+      Object.assign(patch, { response_due, completion_due });
+      data = { department: patch.assigned_department ?? r.assigned_department, assignee_id: patch.assignee_id ?? r.assignee_id, response_due, completion_due,
+        previous: { department: r.assigned_department, assignee_id: r.assignee_id, response_due: r.response_due, completion_due: r.completion_due } };
+    }
+    if (action === "clarify") patch.resume_status = r.status;
+    if (action === "respond") patch.resume_status = null;
+    if (actor === "dept" && ["accept", "reject", "clarify"].includes(action) && !r.responded_at) patch.responded_at = now;
+    if (action === "accept") patch.accepted_at = now;
+    if (action === "progress" && input.estimated_completion) {
+      check(/^\d{4}-\d{2}-\d{2}$/.test(input.estimated_completion), "Estimated completion date is invalid.");
+      patch.estimated_completion = input.estimated_completion;
+      data = { estimated_completion: input.estimated_completion };
+    }
+    if (action === "complete") {
+      const d = input.delivery ?? {}, training = r.category === "Training";
+      const delivery = { date: clean(d.date, 10), description: clean(d.description, 3000), outcome: clean(d.outcome, 1000),
+        ...(training && { topic: clean(d.topic, 200), mode: clean(d.mode, 40), participants: clean(d.participants, 500) }) };
+      check(/^\d{4}-\d{2}-\d{2}$/.test(delivery.date) && Date.parse(delivery.date) <= Date.now(), "Enter the date the support was delivered (not in the future).");
+      check(delivery.description.length >= 20, "Describe the support actually provided (at least 20 characters).");
+      check(delivery.outcome, "Record the outcome.");
+      check(!training || (delivery.topic && delivery.mode && delivery.participants), "For training, record the topic, delivery mode and participants.");
+      Object.assign(patch, { delivery, delivered_at: now, verified_at: null, verified_by: null });
+      data = delivery;
+    }
+    if (action === "verify") Object.assign(patch, { verified_at: now, verified_by: me.id });
+    if (action === "return") patch.delivered_at = null;
+
+    // Applies only if nobody else moved the request on in the meantime.
+    const upd = await ok(db().from("support_requests").update(patch).eq("id", id).eq("status", r.status).select("id"));
+    check(upd.length, "This request was just updated by someone else. Reload and try again.");
+    await srEvent(me, id, actor, action, r.status, to, note, data);
+    await audit(me, `SUPPORT_${action.toUpperCase()}`, `${srRef(id)} ${r.status} → ${to}`);
   });
 }

@@ -3,13 +3,13 @@ import Loading from "../../loading";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { inScope, requireRole } from "@/lib/auth";
-import { getAssessment, getScorecard } from "@/lib/data";
+import { getAssessment, getScorecard, getSettings, visitLocation } from "@/lib/data";
 import { fmtDate, fmtDT, pct, ref } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { PrintButton } from "@/components/PrintButton";
 import { TrendChart } from "@/components/TrendChart";
 import { Gauge } from "@/components/Gauge";
-import { AlertTag, Badge, CountUp, Ledger, PageHead, Reveal, ScoreBar } from "@/components/ui";
+import { AlertTag, Badge, CountUp, Ledger, LocationNote, PageHead, Reveal, ScoreBar } from "@/components/ui";
 import { STATUS_LABEL, type Status } from "@/lib/scoring";
 import { AssessmentPicker, ItemsTable, AddReview, RiskLevelControl } from "./parts";
 
@@ -25,6 +25,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
   const a = aid ? await getAssessment(aid) : null;
   if (a && a.centre_id !== c.id) notFound();
   const isLatest = a && hist.at(-1)?.id === a.id;
+  const loc = a ? visitLocation(a.gps, c, (await getSettings()).gps_flag_m) : null;
 
   return (
     <>
@@ -57,6 +58,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
               <dt>Submitted</dt><dd>{fmtDT(a.submitted_at)} · Ref {ref(a.id)}</dd>
               <dt>Status</dt><dd>{a.status === "Scored" ? "Submitted and scored" : a.status} · {a.reviews.length ? "Reviewed by IAQA" : "Awaiting IAQA review"}</dd>
               <dt>Checklist</dt><dd>Version {a.checklist_version} <span className="small faint">— scored with the rules in force at submission</span></dd>
+              <dt>Visit location</dt><dd><LocationNote loc={loc} /></dd>
             </dl>
           </Reveal>
 
