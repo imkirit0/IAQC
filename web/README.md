@@ -52,7 +52,7 @@ centres — from **My support requests**, from a centre card, or straight after 
 
 - **IAQA Coordinator** (Support tab) reviews, assigns a department and optionally a named in-charge, and sets a *response* deadline and an optional
   *completion* deadline. Reassigning or changing deadlines requires a reason. When support is delivered, IAQA verifies it (switchable under Settings).
-- **Department in-charges** (role `dept`, one department each; created under Users) see only their department's requests: accept, reject with a reason,
+- **Department in-charges** (role `dept`, one department each, optionally one district; created under Users) see only their department's requests from centres in their district (a district PRO never sees another district's requests; no district = all districts): accept, reject with a reason,
   ask for clarification, post progress, put on hold, and record the support actually delivered (training: topic, mode, participants, outcome).
 - **CMD** sees every request, department performance and full histories, read-only.
 - Workflow rules (who may do what from which status) live in `src/lib/support.ts` and are enforced in the `supportAction` server action.

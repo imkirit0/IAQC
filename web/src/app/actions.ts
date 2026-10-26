@@ -177,9 +177,10 @@ export async function createUser(input: { username: string; name: string; area: 
     const district = input.district ? await validDistrict(clean(input.district, 80)) : null;
     const department = input.department ? await validDepartment(input.department) : null;
     const created = await ok(db().auth.admin.createUser({ email: usernameToEmail(username), password: input.password, email_confirm: true, ...(district && { app_metadata: { district } }) }));
-    const p = await db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: department ? "dept" : district ? "cmd" : "ac", area: department ?? district ?? clean(input.area, 100), department });
+    const p = await db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: department ? "dept" : district ? "cmd" : "ac",
+      area: department ? (district ? `${department}, ${district}` : department) : district ?? clean(input.area, 100), department });
     if (p.error) { await db().auth.admin.deleteUser(created.user!.id); throw new Error(p.error.message); }
-    if (department) return void await audit(me, "USER_CREATED", `${username} (Department In-Charge, ${department})`);
+    if (department) return void await audit(me, "USER_CREATED", `${username} (Department In-Charge, ${department}, ${district ?? "all districts"})`);
     if (district) return void await audit(me, "USER_CREATED", `${username} (ASO Director, ${district})`);
     await assignCentres(created.user!.id, input.centre_ids);
     await audit(me, "USER_CREATED", `${username} (Area Coordinator) centres=${input.centre_ids.join(",")}`);
@@ -193,8 +194,10 @@ export async function updateUser(id: string, input: { name: string; area: string
     check(clean(input.name), "Full name is required.");
     if (u?.role === "dept") {
       const department = input.department ? await validDepartment(input.department) : u.department;
-      await ok(db().from("profiles").update({ name: clean(input.name, 100), area: department, department, active: input.active }).eq("id", id));
-      return void await audit(me, "USER_UPDATED", `${u.username} department=${department} active=${input.active}`);
+      const district = input.district ? await validDistrict(clean(input.district, 80)) : null; // blank = all districts
+      await ok(db().auth.admin.updateUserById(id, { app_metadata: { district } }));
+      await ok(db().from("profiles").update({ name: clean(input.name, 100), area: district ? `${department}, ${district}` : department, department, active: input.active }).eq("id", id));
+      return void await audit(me, "USER_UPDATED", `${u.username} department=${department} district=${district ?? "all"} active=${input.active}`);
     }
     const aso = u?.role === "cmd" && await asoDistrict(id);
     check(u?.role === "ac" || aso, "Only Area Coordinator, ASO Director and Department In-Charge accounts can be managed here.");
@@ -339,7 +342,8 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
     const me = await guard("ac", "cmd", "iaqc", "dept");
     check(Object.hasOwn(ACTIONS, action), "Unknown action.");
     const r = await ok(db().from("support_requests").select("*").eq("id", id).maybeSingle()) as SupportRow | null;
-    const actors = r ? actorsOn(me, r) : [];
+    const district = r ? (await ok(db().from("centres").select("district").eq("id", r.centre_id).single())).district as string : "";
+    const actors = r ? actorsOn(me, r, district) : [];
     if (!r || !can(action, actors, r.status)) {
       await audit(me, "ACCESS_DENIED", `support ${action} on #${id}`);
       throw new Forbidden("This action is not available for this request.");
@@ -361,6 +365,8 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
         if (input.assignee_id) {
           const { data: u } = await db().from("profiles").select("id, role, department, active").eq("id", input.assignee_id).maybeSingle();
           check(u?.role === "dept" && u.active && u.department === department, "Choose an active in-charge of that department.");
+          const ud = await asoDistrict(u.id); // in-charges only work within their own district
+          check(!ud || ud.toLowerCase() === district.toLowerCase(), "That in-charge belongs to another district.");
           assignee = u.id;
         }
         // A new assignment starts the department's response and delivery afresh.

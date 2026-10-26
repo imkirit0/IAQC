@@ -22,7 +22,7 @@ const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA C
 /** inbox = support requests waiting on this user (overdue ones, for CMD), shown as a count on the Support tab. */
 export function Masthead({ me, inbox }: { me: { name: string; username: string; role: Role; district: string | null; department: string | null }; inbox: number }) {
   const path = usePathname();
-  const role = me.district ? `ASO Director, ${me.district}` : me.department ? `${me.department} In-Charge` : ROLE_LABEL[me.role];
+  const role = me.department ? `${me.department} In-Charge${me.district ? `, ${me.district}` : ""}` : me.district ? `ASO Director, ${me.district}` : ROLE_LABEL[me.role];
   const [open, setOpen] = useState(false), [pw, setPw] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   // Scorecards belong to the ranking tab.

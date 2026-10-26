@@ -32,7 +32,7 @@ async function RequestPage({ params }: { params: Promise<{ id: string }> }) {
   const r = await getSupportRequest(me, Number((await params).id));
   if (!r) notFound(); // also when this user may not see it
   const acts = actionsFor(r.actors, r.status);
-  const [st, depts] = await Promise.all([getSettings(), acts.some(a => a === "assign" || a === "reassign") ? getDeptUsers() : []]);
+  const [st, depts] = await Promise.all([getSettings(), acts.some(a => a === "assign" || a === "reassign") ? getDeptUsers(r.district) : []]);
   const people = r.names;
   const canSeeAudit = me.role === "iaqc" || me.role === "cmd"; // department in-charges never see audit reports
   const late = (missed: boolean) => (missed ? <span className="late"> · missed</span> : null);

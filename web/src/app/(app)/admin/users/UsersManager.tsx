@@ -78,6 +78,12 @@ function AsoSelect({ asos, value }: { asos: string[]; value?: string }) {
       <select name="district" required defaultValue={value ?? ""}><option value="" disabled>Choose a district</option>{asos.map(a => <option key={a}>{a}</option>)}</select></label>
   );
 }
+function DeptDistrict({ asos, value }: { asos: string[]; value?: string }) {
+  return (
+    <label className="f"><span>District (sees only requests from centres in it)</span>
+      <select name="district" defaultValue={value ?? ""}><option value="">All districts (head office)</option>{asos.map(a => <option key={a}>{a}</option>)}</select></label>
+  );
+}
 function DeptSelect({ departments, value }: { departments: string[]; value?: string }) {
   return (
     <label className="f"><span>Department (sees only requests assigned to it)</span>
@@ -103,7 +109,7 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
 
   return (
     <>
-      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors get read-only access to one district. Department in-charges see only support requests assigned to their department. IAQA and CMD are fixed system accounts.">
+      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors get read-only access to one district. Department in-charges (e.g. a district's PRO) see only support requests assigned to their department from centres in their district. IAQA and CMD are fixed system accounts.">
         <button className="btn" onClick={() => setCreatingDept(true)}><Icon name="plus" />New Department In-Charge</button>
         <button className="btn" onClick={() => setCreatingAso(true)}><Icon name="plus" />New ASO Director</button>
         <button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New Area Coordinator</button>
@@ -113,13 +119,13 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
         <tbody>{users.map((u, i) => (
           <motion.tr key={u.id} className={u.active ? "" : "inactive"} initial={{ opacity: 0, y: 6 }} animate={{ opacity: u.active ? 1 : 0.55, y: 0 }} transition={{ delay: i * 0.03 }}>
             <td data-l="Name"><div className="row" style={{ gap: 10, flexWrap: "nowrap" }}><span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{initials(u.name)}</span><b>{u.name}</b></div></td>
-            <td data-l="Username" className="muted">{u.username}</td><td data-l="Role">{u.district ? "ASO Director" : u.role === "dept" ? `In-Charge, ${u.department}` : ROLE[u.role]}</td><td data-l="Area" className="small">{u.area}</td>
-            <td data-l="Assigned centres" className="small">{u.role === "ac" ? (u.centres.map(c => c.code).join(", ") || <span className="faint">None</span>) : <span className="faint">{u.district ? `All in ${u.district}` : u.role === "dept" ? "None (support requests only)" : "All (role-based)"}</span>}</td>
+            <td data-l="Username" className="muted">{u.username}</td><td data-l="Role">{u.role === "dept" ? `In-Charge, ${u.department}` : u.district ? "ASO Director" : ROLE[u.role]}</td><td data-l="Area" className="small">{u.area}</td>
+            <td data-l="Assigned centres" className="small">{u.role === "ac" ? (u.centres.map(c => c.code).join(", ") || <span className="faint">None</span>) : <span className="faint">{u.role === "dept" ? `Support requests, ${u.district ?? "all districts"}` : u.district ? `All in ${u.district}` : "All (role-based)"}</span>}</td>
             <td data-l="Status">{u.active ? <span className="badge b-green">Active</span> : <span className="badge b-grey">Inactive</span>}</td>
             <td data-l="" className="nowrap right">{u.role === "ac" || u.role === "dept" || u.district ? <>
               <button className="btn sm quiet" onClick={() => toggle(u)}>{u.active ? "Deactivate" : "Activate"}</button>{" "}
               <button className="btn sm" onClick={() => setResetting(u)}>Reset password</button>{" "}
-              <button className="btn sm" onClick={() => u.district ? setEditingAso(u) : u.role === "dept" ? setEditingDept(u) : setEditing(u)}>Edit</button>
+              <button className="btn sm" onClick={() => u.role === "dept" ? setEditingDept(u) : u.district ? setEditingAso(u) : setEditing(u)}>Edit</button>
             </> : <span className="small faint">System account</span>}</td>
           </motion.tr>
         ))}</tbody>
@@ -181,7 +187,7 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
 
       <Modal open={creatingDept} onClose={() => setCreatingDept(false)} title="New Department In-Charge" submitLabel="Create account" onSubmit={async f => {
         const v = formData(f);
-        const r = await createUser({ username: v.username, name: v.name, area: "", password: v.password, centre_ids: [], department: v.department });
+        const r = await createUser({ username: v.username, name: v.name, area: "", password: v.password, centre_ids: [], department: v.department, district: v.district });
         if (r.error) return r.error;
         done("Department in-charge created");
       }}>
@@ -189,19 +195,19 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
           <label className="f"><span>Full name</span><input name="name" required /></label>
           <label className="f"><span>Username</span><input name="username" required pattern="[A-Za-z0-9._]+" placeholder="e.g. academics.head" autoCapitalize="none" /></label>
         </div>
-        <DeptSelect departments={departments} />
+        <div className="grid2"><DeptSelect departments={departments} /><DeptDistrict asos={asos} /></div>
         <label className="f"><span>Temporary password (share it securely)</span><input name="password" required minLength={8} defaultValue={creatingDept ? tempPassword() : ""} /></label>
       </Modal>
 
       <Modal open={!!editingDept} onClose={() => setEditingDept(null)} title="Edit Department In-Charge" onSubmit={async f => {
         const v = formData(f);
-        const r = await updateUser(editingDept!.id, { name: v.name, area: "", active: v.active === "on", department: v.department });
+        const r = await updateUser(editingDept!.id, { name: v.name, area: "", active: v.active === "on", department: v.department, district: v.district });
         if (r.error) return r.error;
         done("User updated");
       }}>
         {editingDept && <>
           <label className="f"><span>Full name</span><input name="name" required defaultValue={editingDept.name} /></label>
-          <DeptSelect departments={departments} value={editingDept.department ?? undefined} />
+          <div className="grid2"><DeptSelect departments={departments} value={editingDept.department ?? undefined} /><DeptDistrict asos={asos} value={editingDept.district ?? undefined} /></div>
           <label className="check"><input type="checkbox" name="active" defaultChecked={editingDept.active} /> Active account</label>
         </>}
       </Modal>

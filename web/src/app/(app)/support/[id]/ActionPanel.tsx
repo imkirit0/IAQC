@@ -8,7 +8,7 @@ import { ACTIONS, type ActionName } from "@/lib/support";
 import { today } from "@/lib/format";
 
 type Props = {
-  id: number; actions: ActionName[]; training: boolean; departments: string[]; users: { id: string; name: string; department: string | null }[];
+  id: number; actions: ActionName[]; training: boolean; departments: string[]; users: { id: string; name: string; department: string | null; district: string | null }[];
   current: { department: string; assignee_id: string | null; response_due: string | null; completion_due: string | null };
 };
 const PRIMARY: ActionName[] = ["assign", "accept", "complete", "verify", "respond"];
@@ -49,9 +49,9 @@ export function ActionPanel({ id, actions, training, departments, users, current
               <label className="f"><span>Department</span><select name="department" required value={dept} onChange={e => setDept(e.target.value)}>
                 {!departments.includes(dept) && <option value={dept} disabled>{dept}</option>}{departments.map(d => <option key={d}>{d}</option>)}</select></label>
               <label className="f"><span>In-charge</span><select name="assignee_id" defaultValue={current.assignee_id ?? ""} key={dept}>
-                <option value="">Any in-charge of the department</option>{users.filter(u => u.department === dept).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
+                <option value="">Any in-charge of the department</option>{users.filter(u => u.department === dept).map(u => <option key={u.id} value={u.id}>{u.name}{u.district ? ` (${u.district})` : " (all districts)"}</option>)}</select></label>
             </div>
-            {!users.some(u => u.department === dept) && <p className="small faint" style={{ marginTop: -6 }}>No in-charge account exists for this department yet. Create one under Users.</p>}
+            {!users.some(u => u.department === dept) && <p className="small faint" style={{ marginTop: -6 }}>No in-charge of this department covers this centre&apos;s district yet. Create one under Users.</p>}
           </>}
           {(assigning || open === "deadlines") && (
             <div className="grid2">

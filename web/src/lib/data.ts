@@ -1,7 +1,7 @@
 import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
-import type { Me } from "./auth";
+import { inScope, type Me } from "./auth";
 import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
@@ -213,16 +213,17 @@ export type SupportRow = {
 export type SupportEvent = { id: number; request_id: number; at: string; user_id: string | null; actor: string; action: string; from_status: string | null; to_status: string | null; note: string; data: Record<string, unknown> | null; by?: string };
 export type SupportItem = SupportRow & ReturnType<typeof lateness> & { requester: string; requester_role: string; assignee: string | null; centre_name: string; centre_code: string; district: string; reassigned: number };
 
-/** What this user may do on a request: requester of their own, IAQA everywhere, a department in-charge on its department's requests. */
-export function actorsOn(me: Me, r: Pick<SupportRow, "requester_id" | "assigned_department" | "assignee_id">): Actor[] {
+/** What this user may do on a request: requester of their own, IAQA everywhere, a department in-charge on its department's requests
+ *  for centres in its district (an in-charge without a district covers all districts). `district` is the request's centre district. */
+export function actorsOn(me: Me, r: Pick<SupportRow, "requester_id" | "assigned_department" | "assignee_id">, district: string): Actor[] {
   const a: Actor[] = [];
   if (r.requester_id === me.id) a.push("requester");
   if (me.role === "iaqc") a.push("iaqc");
-  if (me.role === "dept" && (r.assignee_id === me.id || (!!me.department && r.assigned_department === me.department))) a.push("dept");
+  if (me.role === "dept" && inScope(me, district) && (r.assignee_id === me.id || (!!me.department && r.assigned_department === me.department))) a.push("dept");
   return a;
 }
 /** IAQA and CMD (not district ASO accounts) monitor every request; everyone else only those they act on. */
-export const canSeeRequest = (me: Me, r: SupportRow) => me.role === "iaqc" || (me.role === "cmd" && !me.district) || actorsOn(me, r).length > 0;
+export const canSeeRequest = (me: Me, r: SupportItem) => me.role === "iaqc" || (me.role === "cmd" && !me.district) || actorsOn(me, r, r.district).length > 0;
 
 async function enrich(rows: SupportRow[], reassigns: Map<number, number> = new Map()): Promise<SupportItem[]> {
   const [ps, cs] = await Promise.all([db().from("profiles").select("id, name, role"), db().from("centres").select("id, name, code, district")]);
@@ -242,22 +243,27 @@ export async function getSupportRequests(me: Me): Promise<SupportItem[]> {
   const [rs, ev] = await Promise.all([db().from("support_requests").select("*").order("id", { ascending: false }), db().from("support_events").select("request_id").eq("action", "reassign")]);
   const reassigns = new Map<number, number>();
   (must(ev) as { request_id: number }[]).forEach(e => reassigns.set(e.request_id, (reassigns.get(e.request_id) ?? 0) + 1));
-  return enrich((must(rs) as SupportRow[]).filter(r => canSeeRequest(me, r)), reassigns);
+  return (await enrich(must(rs) as SupportRow[], reassigns)).filter(r => canSeeRequest(me, r));
 }
 
 /** Null when it does not exist or this user may not see it (no difference shown, so IDs cannot be probed). */
 export async function getSupportRequest(me: Me, id: number) {
   const r = must(await db().from("support_requests").select("*").eq("id", id).maybeSingle()) as SupportRow | null;
-  if (!r || !canSeeRequest(me, r)) return null;
+  if (!r) return null;
   const [names, ev] = await Promise.all([profileNames(), db().from("support_events").select("*").eq("request_id", id).order("id")]);
   const events = (must(ev) as SupportEvent[]).map(e => ({ ...e, by: e.user_id ? names.get(e.user_id) ?? "—" : "System" }));
   const [item] = await enrich([r], new Map([[id, events.filter(e => e.action === "reassign").length]]));
-  return { ...item, events, actors: actorsOn(me, r), names };
+  if (!canSeeRequest(me, item)) return null;
+  return { ...item, events, actors: actorsOn(me, r, item.district), names };
 }
 
-export async function getDeptUsers() {
-  const rs = must(await db().from("profiles").select("id, name, department, active").eq("role", "dept").eq("active", true).order("name")) as { id: string; name: string; department: string | null }[];
-  return rs;
+/** In-charges who may take a request for a centre in `district`: those of that district plus any covering all districts. */
+export async function getDeptUsers(district: string) {
+  const [ps, au] = await Promise.all([db().from("profiles").select("id, name, department").eq("role", "dept").eq("active", true).order("name"),
+    db().auth.admin.listUsers({ perPage: 1000 })]); // ponytail: single page of auth users, as in getUsers
+  const d = new Map(au.data.users.map(u => [u.id, (u.app_metadata?.district as string) || null]));
+  return (must(ps) as { id: string; name: string; department: string | null }[])
+    .map(u => ({ ...u, district: d.get(u.id) ?? null })).filter(u => !u.district || u.district.toLowerCase() === district.toLowerCase());
 }
 
 /** Requests waiting on this user: the masthead count is the in-app notification. Monitoring (CMD) counts overdue ones. */
