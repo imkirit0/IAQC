@@ -44,7 +44,7 @@ export function Masthead({ me, inbox }: { me: { name: string; username: string; 
           <img src="/brand/gtec-logo.png" alt="G-TEC Education" width={50} height={34} />
           <b>IAQA</b><small>Internal Audit<br />&amp; Quality Assurance</small>
         </Link>
-        <nav className="nav" aria-label="Main">
+        <nav className={`nav${NAV[me.role].length > 5 ? " many" : ""}`} aria-label="Main">
           {NAV[me.role].map(([href, label, icon]) => (
             <Link key={href} href={href} className={active(href) ? "on" : ""} aria-current={active(href) ? "page" : undefined}>
               <Icon name={icon} />{label}{href === "/support" && inbox > 0 && <span className="count" title={`${inbox} need attention`}>{inbox}</span>}
