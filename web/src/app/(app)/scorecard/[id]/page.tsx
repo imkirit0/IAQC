@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Loading from "../../loading";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { inScope, requireRole } from "@/lib/auth";
+import { inScope, requireRole, seesLocation } from "@/lib/auth";
 import { getAssessment, getScorecard, getSettings, visitLocation } from "@/lib/data";
 import { fmtDate, fmtDT, pct, ref } from "@/lib/format";
 import { Icon } from "@/components/Icon";
@@ -25,7 +25,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
   const a = aid ? await getAssessment(aid) : null;
   if (a && a.centre_id !== c.id) notFound();
   const isLatest = a && hist.at(-1)?.id === a.id;
-  const loc = a ? visitLocation(a.gps, c, (await getSettings()).gps_flag_m) : null;
+  const loc = a && seesLocation(me) ? visitLocation(a.gps, c, (await getSettings()).gps_flag_m) : null;
 
   return (
     <>
@@ -58,7 +58,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
               <dt>Submitted</dt><dd>{fmtDT(a.submitted_at)} · Ref {ref(a.id)}</dd>
               <dt>Status</dt><dd>{a.status === "Scored" ? "Submitted and scored" : a.status} · {a.reviews.length ? "Reviewed by IAQA" : "Awaiting IAQA review"}</dd>
               <dt>Checklist</dt><dd>Version {a.checklist_version} <span className="small faint">— scored with the rules in force at submission</span></dd>
-              <dt>Visit location</dt><dd><LocationNote loc={loc} /></dd>
+              {seesLocation(me) && <><dt>Visit location</dt><dd><LocationNote loc={loc} /></dd></>}
             </dl>
           </Reveal>
 

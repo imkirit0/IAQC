@@ -27,6 +27,14 @@ function What({ e, people }: { e: SupportEvent; people: Map<string, string> }) {
   return <>{ACTIONS[e.action as ActionName]?.label ?? e.action}</>;
 }
 
+/** Where the action was submitted from. Location fields are only filled in for IAQA and CMD (see getSupportRequest). */
+function Where({ e }: { e: SupportEvent }) {
+  if (e.gps_lat != null && e.gps_lng != null) return <div className="small faint row" style={{ gap: 4 }}><Icon name="pin" />
+    <a href={`https://www.google.com/maps?q=${e.gps_lat},${e.gps_lng}`} target="_blank" rel="noreferrer">{e.gps_lat.toFixed(5)}, {e.gps_lng.toFixed(5)}</a> ±{e.gps_accuracy ?? "?"} m</div>;
+  if (e.gps_reason) return <div className="small faint">Location not captured: {e.gps_reason}</div>;
+  return null;
+}
+
 async function RequestPage({ params }: { params: Promise<{ id: string }> }) {
   const me = await requireRole("ac", "cmd", "iaqc", "dept");
   const r = await getSupportRequest(me, Number((await params).id));
@@ -100,6 +108,7 @@ async function RequestPage({ params }: { params: Promise<{ id: string }> }) {
               {e.from_status !== e.to_status && e.to_status && <div className="small">{e.from_status ? `${e.from_status} → ` : ""}{e.to_status}</div>}
               {e.note && e.action !== "create" && <div className="small muted" style={{ marginTop: 2, whiteSpace: "pre-wrap" }}>{e.note}</div>}
               <div className="small faint" style={{ marginTop: 2 }}>{e.by} · {ACTOR[e.actor] ?? e.actor} · {fmtDT(e.at)}</div>
+              <Where e={e} />
             </li>
           ))}</ol></div>
         </Reveal>

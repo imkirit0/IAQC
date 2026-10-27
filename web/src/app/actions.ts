@@ -241,6 +241,17 @@ export async function setRiskLevel(assessmentId: number, input: { category: stri
 type GpsFix = { lat: number; lng: number; accuracy: number | null; at: string };
 const GPS_MAX_AGE_MS = 10 * 60e3;
 
+/** A real, recent device fix as columns; never substituted with a registered point. */
+function fixFields(g: GpsFix) {
+  const age = Date.now() - Date.parse(g.at);
+  check(Number.isFinite(g.lat) && Number.isFinite(g.lng) && Math.abs(g.lat) <= 90 && Math.abs(g.lng) <= 180 && (g.accuracy == null || (Number.isFinite(g.accuracy) && g.accuracy >= 0)), "The captured location is invalid. Capture it again.");
+  check(age > -120e3 && age < GPS_MAX_AGE_MS, "The captured location is out of date. Capture it again.");
+  return { gps_lat: g.lat, gps_lng: g.lng, gps_accuracy: g.accuracy == null ? null : Math.round(g.accuracy), gps_at: new Date(g.at).toISOString(), gps_reason: null };
+}
+/** Support submissions record where they were made, or why that is unknown; a missing location never blocks them. */
+export type Located = { gps?: GpsFix | null; gps_reason?: string };
+const located = (l: Located = {}) => (l.gps ? fixFields(l.gps) : { gps_reason: clean(l.gps_reason, 300) || "Location not provided" });
+
 export async function submitAssessment(input: { centre_id: number; visit_date: string; responses: Responses; general_remarks: string; checklist_version: number; gps: GpsFix | null; gps_reason?: string }) {
   return run(async () => {
     const me = await guard("ac");
@@ -249,13 +260,10 @@ export async function submitAssessment(input: { centre_id: number; visit_date: s
     const vd = new Date(input.visit_date + "T00:00:00"), today = new Date(new Date().toDateString());
     check(!isNaN(+vd) && vd <= today && (+today - +vd) / 864e5 <= 60, "Visit date must be within the last 60 days and not in the future.");
     // Location: verified only with a real, recent device fix; never substituted with the centre's registered point.
-    const g = input.gps, st = await getSettings(), age = g ? Date.now() - Date.parse(g.at) : NaN;
+    const g = input.gps, st = await getSettings();
     let gps: Record<string, unknown>;
-    if (g) {
-      check(Number.isFinite(g.lat) && Number.isFinite(g.lng) && Math.abs(g.lat) <= 90 && Math.abs(g.lng) <= 180 && (g.accuracy == null || (Number.isFinite(g.accuracy) && g.accuracy >= 0)), "The captured location is invalid. Capture it again.");
-      check(age > -120e3 && age < GPS_MAX_AGE_MS, "The captured location is out of date. Capture it again.");
-      gps = { gps_status: "verified", gps_lat: g.lat, gps_lng: g.lng, gps_accuracy: g.accuracy == null ? null : Math.round(g.accuracy), gps_at: new Date(g.at).toISOString(), gps_reason: null };
-    } else {
+    if (g) gps = { gps_status: "verified", ...fixFields(g) };
+    else {
       check(!st.gps_required, "Your current location is required to submit this report. Allow location access and try again.");
       check(clean(input.gps_reason), "Explain why your location could not be captured.");
       gps = { gps_status: "unavailable", gps_reason: clean(input.gps_reason, 500) };
@@ -299,11 +307,11 @@ export async function saveSupportSettings(input: { departments: string[]; verifi
   });
 }
 
-async function srEvent(me: Me, id: number, actor: string, action: string, from: string | null, to: string | null, note: string, data: Record<string, unknown> | null = null) {
-  await ok(db().from("support_events").insert({ request_id: id, user_id: me.id, actor, action, from_status: from, to_status: to, note, data }));
+async function srEvent(me: Me, id: number, actor: string, action: string, from: string | null, to: string | null, note: string, data: Record<string, unknown> | null, loc: Located | undefined) {
+  await ok(db().from("support_events").insert({ request_id: id, user_id: me.id, actor, action, from_status: from, to_status: to, note, data, ...located(loc) }));
 }
 
-export async function createSupportRequest(input: { centre_id: number; assessment_id: number | null; department: string; category: string; title: string; remarks: string; priority: string; preferred_date: string }) {
+export async function createSupportRequest(input: { centre_id: number; assessment_id: number | null; department: string; category: string; title: string; remarks: string; priority: string; preferred_date: string } & Located) {
   return run(async () => {
     const me = await guard("ac", "cmd");
     check(canRequest(me), "Only Area Coordinators and ASO Directors can raise support requests.");
@@ -325,7 +333,7 @@ export async function createSupportRequest(input: { centre_id: number; assessmen
     check(!preferred_date || (/^\d{4}-\d{2}-\d{2}$/.test(preferred_date) && !isNaN(Date.parse(preferred_date))), "Preferred date is invalid.");
     const row = await ok(db().from("support_requests").insert({ requester_id: me.id, centre_id: c.id, assessment_id, department, category: input.category, title, remarks, priority: input.priority, preferred_date })
       .select("id").single());
-    await srEvent(me, row.id, "requester", "create", null, "Submitted", remarks, { centre: c.code, department, category: input.category, title, priority: input.priority, preferred_date, assessment_id });
+    await srEvent(me, row.id, "requester", "create", null, "Submitted", remarks, { centre: c.code, department, category: input.category, title, priority: input.priority, preferred_date, assessment_id }, input);
     await audit(me, "SUPPORT_REQUEST_CREATED", `${srRef(row.id)} ${c.code} ${department}`);
     return { ok: true, data: { id: row.id, reference: srRef(row.id) } };
   });
@@ -334,7 +342,7 @@ export async function createSupportRequest(input: { centre_id: number; assessmen
 export type SupportInput = {
   note?: string; department?: string; assignee_id?: string; response_due?: string; completion_due?: string; estimated_completion?: string;
   delivery?: { date?: string; description?: string; topic?: string; mode?: string; participants?: string; outcome?: string };
-};
+} & Located;
 
 /** Every workflow step goes through here: the role/status rules in lib/support.ts decide, the history row records it. */
 export async function supportAction(id: number, action: ActionName, input: SupportInput = {}) {
@@ -405,7 +413,7 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
     // Applies only if nobody else moved the request on in the meantime.
     const upd = await ok(db().from("support_requests").update(patch).eq("id", id).eq("status", r.status).select("id"));
     check(upd.length, "This request was just updated by someone else. Reload and try again.");
-    await srEvent(me, id, actor, action, r.status, to, note, data);
+    await srEvent(me, id, actor, action, r.status, to, note, data, input);
     await audit(me, `SUPPORT_${action.toUpperCase()}`, `${srRef(id)} ${r.status} → ${to}`);
   });
 }

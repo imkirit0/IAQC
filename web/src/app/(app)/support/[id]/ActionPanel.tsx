@@ -6,6 +6,7 @@ import { Modal, formData } from "@/components/Modal";
 import { useToast } from "@/components/Providers";
 import { ACTIONS, type ActionName } from "@/lib/support";
 import { today } from "@/lib/format";
+import { tryLocate } from "@/lib/client";
 
 type Props = {
   id: number; actions: ActionName[]; training: boolean; departments: string[]; users: { id: string; name: string; department: string | null; district: string | null }[];
@@ -31,7 +32,7 @@ export function ActionPanel({ id, actions, training, departments, users, current
     const input: SupportInput = { note: v.note, department: v.department, assignee_id: v.assignee_id, response_due: toIso(v.response_due), completion_due: toIso(v.completion_due),
       estimated_completion: v.estimated_completion,
       delivery: open === "complete" ? { date: v.d_date, description: v.d_description, topic: v.d_topic, mode: v.d_mode, participants: v.d_participants, outcome: v.d_outcome } : undefined };
-    const r = await supportAction(id, open!, input);
+    const r = await supportAction(id, open!, { ...input, ...await tryLocate() });
     if (r.error) return r.error;
     toast(`${ACTIONS[open!].label}: done`);
     router.refresh();
@@ -73,6 +74,7 @@ export function ActionPanel({ id, actions, training, departments, users, current
             <label className="f"><span>Outcome</span><textarea name="d_outcome" required rows={3} /></label>
           </>}
           <label className="f"><span>{NOTE_LABEL[open] ?? "Note (optional)"}</span><textarea name="note" required={!!(def && "reason" in def)} rows={3} /></label>
+          <p className="small faint" style={{ margin: 0 }}>Your current location is recorded with this action.</p>
         </>}
       </Modal>
     </>

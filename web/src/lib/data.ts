@@ -1,7 +1,7 @@
 import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
-import { inScope, type Me } from "./auth";
+import { inScope, seesLocation, type Me } from "./auth";
 import { DEFAULT_DEPARTMENTS, DIRECTORY, distanceM, lateness, type Actor, type DirKind } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
@@ -210,7 +210,8 @@ export type SupportRow = {
   estimated_completion: string | null; delivered_at: string | null; delivery: Record<string, string> | null; verified_at: string | null; verified_by: string | null;
   created_at: string; updated_at: string;
 };
-export type SupportEvent = { id: number; request_id: number; at: string; user_id: string | null; actor: string; action: string; from_status: string | null; to_status: string | null; note: string; data: Record<string, unknown> | null; by?: string };
+export type SupportEvent = { id: number; request_id: number; at: string; user_id: string | null; actor: string; action: string; from_status: string | null; to_status: string | null; note: string; data: Record<string, unknown> | null; by?: string;
+  gps_lat: number | null; gps_lng: number | null; gps_accuracy: number | null; gps_at: string | null; gps_reason: string | null };
 export type SupportItem = SupportRow & ReturnType<typeof lateness> & { requester: string; requester_role: string; assignee: string | null; centre_name: string; centre_code: string; district: string; reassigned: number };
 
 /** What this user may do on a request: requester of their own, IAQA everywhere, a department in-charge on its department's requests
@@ -251,7 +252,8 @@ export async function getSupportRequest(me: Me, id: number) {
   const r = must(await db().from("support_requests").select("*").eq("id", id).maybeSingle()) as SupportRow | null;
   if (!r) return null;
   const [names, ev] = await Promise.all([profileNames(), db().from("support_events").select("*").eq("request_id", id).order("id")]);
-  const events = (must(ev) as SupportEvent[]).map(e => ({ ...e, by: e.user_id ? names.get(e.user_id) ?? "—" : "System" }));
+  const hide = seesLocation(me) ? {} : { gps_lat: null, gps_lng: null, gps_accuracy: null, gps_at: null, gps_reason: null };
+  const events = (must(ev) as SupportEvent[]).map(e => ({ ...e, ...hide, by: e.user_id ? names.get(e.user_id) ?? "—" : "System" }));
   const [item] = await enrich([r], new Map([[id, events.filter(e => e.action === "reassign").length]]));
   if (!canSeeRequest(me, item)) return null;
   return { ...item, events, actors: actorsOn(me, r, item.district), names };

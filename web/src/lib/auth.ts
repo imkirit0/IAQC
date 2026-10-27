@@ -32,6 +32,9 @@ export const inScope = (me: Me, district: string) => !me.district || me.district
 /** Area Coordinators and ASO Directors raise support requests; CMD itself only monitors. */
 export const canRequest = (me: Me) => me.role === "ac" || (me.role === "cmd" && !!me.district);
 
+/** Where people were when they submitted: IAQA and CMD only (not district ASO accounts). */
+export const seesLocation = (me: Me) => me.role === "iaqc" || (me.role === "cmd" && !me.district);
+
 export class Forbidden extends Error {}
 
 /** Server actions: throw instead of redirect, and record the attempt. */

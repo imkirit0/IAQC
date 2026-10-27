@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
-import { useHydrated } from "@/lib/client";
+import { locate, useHydrated, type Fix } from "@/lib/client";
 import { submitAssessment } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 import { useToast } from "@/components/Providers";
@@ -16,21 +16,6 @@ const OPTIONS: Status[] = ["C", "P", "N", "NA"];
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 type Props = { userId: string; centre: CentreInfo; snap: Snapshot; gpsRequired: boolean };
-type Fix = { lat: number; lng: number; accuracy: number | null; at: string };
-
-/** One fresh fix from the device at submission time (no background tracking). */
-function locate(): Promise<Fix> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) return reject(new Error("This browser cannot provide a location."));
-    navigator.geolocation.getCurrentPosition(
-      p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy ?? null, at: new Date(p.timestamp).toISOString() }),
-      e => reject(new Error(e.code === 1 ? "Location permission was denied. Allow location for this site in your browser settings, then try again."
-        : e.code === 3 ? "Finding your location took too long. Move to an open area and try again."
-        : "Your location is unavailable. Check that location services are switched on, then try again.")),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 },
-    );
-  });
-}
 
 // The draft lives in browser storage, so the form renders only after hydration.
 export function VisitForm(props: Props) {
@@ -127,10 +112,6 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
             <div key={c.id} className={`crit-card${r.status && !answered(c) ? " missing" : ""}`}>
               <div className="q">{c.text}</div>
               {c.description && <details className="small muted" style={{ marginTop: 2 }}><summary>Guidelines</summary>{c.description}</details>}
-              <div className="row" style={{ gap: 6, marginTop: 8 }}>
-                {c.critical && <span className="chip crit">Critical item</span>}
-                {c.mandatory && <span className="chip mand">Mandatory</span>}
-              </div>
               <div className="opts" role="radiogroup" aria-label={c.text}>
                 {OPTIONS.map(k => {
                   const dis = k === "NA" && c.mandatory, on = r.status === k;

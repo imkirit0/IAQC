@@ -6,6 +6,7 @@ import { createSupportRequest } from "@/app/actions";
 import { formData } from "@/components/Modal";
 import { Icon } from "@/components/Icon";
 import { ref, today } from "@/lib/format";
+import { tryLocate } from "@/lib/client";
 import { CATEGORIES, SR_PRIORITIES } from "@/lib/support";
 
 type Props = { centres: { id: number; code: string; name: string }[]; departments: string[]; centreId: number | null; visitId: number | null };
@@ -19,7 +20,7 @@ export function RequestForm({ centres, departments, centreId, visitId }: Props) 
     const v = formData(e.currentTarget);
     setBusy(true);
     const r = await createSupportRequest({ centre_id: Number(v.centre_id), assessment_id: linked, department: v.department, category: v.category, title: v.title,
-      remarks: v.remarks, priority: v.priority, preferred_date: v.preferred_date });
+      remarks: v.remarks, priority: v.priority, preferred_date: v.preferred_date, ...await tryLocate() });
     setBusy(false);
     if (r.error) return setErr(r.error);
     setErr(""); setDone(r.data as { id: number; reference: string });
@@ -60,7 +61,7 @@ export function RequestForm({ centres, departments, centreId, visitId }: Props) 
         <label className="f"><span>Preferred support date (optional)</span><input type="date" name="preferred_date" min={today()} /></label>
       </div>
       {err && <div className="err" role="alert">{err}</div>}
-      <div className="row"><span className="small faint">Your request is recorded as submitted and cannot be edited afterwards.</span><span className="spacer" />
+      <div className="row"><span className="small faint">Your request is recorded as submitted, with your current location, and cannot be edited afterwards.</span><span className="spacer" />
         <button className={`btn primary${busy ? " loading" : ""}`} disabled={busy}>Submit request</button></div>
     </div></form>
   );
