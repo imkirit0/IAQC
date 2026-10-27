@@ -1,7 +1,15 @@
 // Support-request workflow: statuses, who may do what from which status, deadline flags. Pure, so the server enforces it
 // and the UI shows only what the server would accept. `npm run check` exercises it.
 
-export const DEFAULT_DEPARTMENTS = ["Academics", "PRO / Public Relations", "Marketing", "Materials", "Certification", "Operational Support", "Other"];
+export const DEFAULT_DEPARTMENTS = ["Academics", "PRO / Public Relations", "Marketing", "Materials", "Certification", "Placement", "Operational Support", "Other"];
+
+/** Contact directories: each is maintained by IAQA and by the in-charges of its department. */
+export const DIRECTORY = {
+  pro: { label: "PROs", dept: "PRO / Public Relations", notes: "Notes" },
+  trainer: { label: "Trainers", dept: "Academics", notes: "Courses / subjects" },
+  placement: { label: "Placement Officers (GOBS Bank)", dept: "Placement", notes: "Companies / sectors" },
+} as const;
+export type DirKind = keyof typeof DIRECTORY;
 export const CATEGORIES = ["Training", "Academic Support", "PRO Support", "Marketing Support", "Materials Support", "Certification Support", "Operational Support", "Other"];
 export const SR_PRIORITIES = ["Normal", "High", "Urgent"] as const;
 export const SR_STATUSES = ["Submitted", "Under Review", "Awaiting Clarification", "Assigned", "Accepted", "In Progress", "On Hold",

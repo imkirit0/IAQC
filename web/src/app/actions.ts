@@ -3,8 +3,8 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { actorsOn, getSettings, makeSnapshot, type SupportRow } from "@/lib/data";
-import { ACTIONS, CATEGORIES, can, nextStatus, SR_PRIORITIES, srRef, type ActionName } from "@/lib/support";
+import { actorsOn, canEditDir, getSettings, makeSnapshot, type SupportRow } from "@/lib/data";
+import { ACTIONS, CATEGORIES, can, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
 export type Result = { ok?: true; error?: string; data?: Record<string, unknown> };
@@ -407,5 +407,42 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
     check(upd.length, "This request was just updated by someone else. Reload and try again.");
     await srEvent(me, id, actor, action, r.status, to, note, data);
     await audit(me, `SUPPORT_${action.toUpperCase()}`, `${srRef(id)} ${r.status} → ${to}`);
+  });
+}
+
+// ---------- contact directories ----------
+
+/** The entry's current kind/district must be editable by this user; a district in-charge's entries stay in its district. */
+async function dirScope(me: Me, id: number | null, kind: DirKind) {
+  check(Object.hasOwn(DIRECTORY, kind), "Choose a list.");
+  const old = id ? await ok(db().from("directory").select("kind, district").eq("id", id).maybeSingle()) as { kind: DirKind; district: string | null } | null : null;
+  const allowed = (k: DirKind, d: string | null) => canEditDir(me, k) && (!me.district || d?.toLowerCase() === me.district.toLowerCase());
+  if ((id && (!old || !allowed(old.kind, old.district))) || !canEditDir(me, kind)) {
+    await audit(me, "ACCESS_DENIED", `directory ${kind} #${id ?? "new"}`);
+    throw new Forbidden("You cannot edit this list.");
+  }
+}
+
+export async function saveDirEntry(id: number | null, input: { kind: DirKind; name: string; phone: string; email: string; district: string; notes: string }) {
+  return run(async () => {
+    const me = await guard("iaqc", "dept");
+    await dirScope(me, id, input.kind);
+    const row = { kind: input.kind, name: clean(input.name, 100), phone: clean(input.phone, 40), email: clean(input.email, 120), notes: clean(input.notes, 1000),
+      district: me.district ?? (input.district.trim() ? await validDistrict(clean(input.district, 80)) : null), updated_at: new Date().toISOString() };
+    check(row.name, "Name is required.");
+    check(row.phone || row.email, "Enter a phone number or an email address.");
+    check(!row.email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email), "Email address is invalid.");
+    if (id) await ok(db().from("directory").update(row).eq("id", id));
+    else await ok(db().from("directory").insert(row));
+    await audit(me, id ? "DIRECTORY_UPDATED" : "DIRECTORY_CREATED", `${DIRECTORY[row.kind].label}: ${row.name} (${row.district ?? "all districts"})`);
+  });
+}
+
+export async function deleteDirEntry(id: number, kind: DirKind) {
+  return run(async () => {
+    const me = await guard("iaqc", "dept");
+    await dirScope(me, id, kind);
+    const [e] = await ok(db().from("directory").delete().eq("id", id).select("name"));
+    await audit(me, "DIRECTORY_DELETED", `${DIRECTORY[kind].label}: ${e?.name ?? `#${id}`}`);
   });
 }

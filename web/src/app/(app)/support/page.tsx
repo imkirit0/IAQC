@@ -43,10 +43,12 @@ async function SupportPage() {
   const me = await requireRole("ac", "cmd", "iaqc", "dept");
   const rows = await getSupportRequests(me);
   const monitor = me.role === "iaqc" || (me.role === "cmd" && !me.district);
+  const aso = me.role === "cmd" && !!me.district;
   const n = (f: (r: SupportItem) => boolean) => rows.filter(f).length;
-  const title = me.role === "dept" ? `${me.department ?? "Department"} requests` : monitor ? "Support requests" : "My support requests";
+  const title = me.role === "dept" ? `${me.department ?? "Department"} requests` : monitor ? "Support requests" : aso ? `Support requests, ${me.district}` : "My support requests";
   const sub = me.role === "iaqc" ? "Review new requests, assign them to a department with response and completion deadlines, and verify delivered support."
     : monitor ? "Every support request, its deadlines and its full history. Monitoring only."
+    : aso ? "Support you and your district's Area Coordinators have requested, and the full history of each."
     : me.role === "dept" ? "Requests assigned to your department. Accept, record progress and record the support delivered."
     : "Training and other support you have requested, and where each one stands.";
   return (
@@ -68,10 +70,10 @@ async function SupportPage() {
           { label: "Awaiting verification", value: n(r => r.status === "Completed - Awaiting Verification") }, { label: "Completed", value: n(r => r.status === "Completed"), tone: "g" },
           { label: "Overdue", value: n(r => r.overdue), tone: "c" },
         ]} />
-      ) : n(r => r.status === "Awaiting Clarification") > 0 && (
-        <div className="banner warn"><Icon name="info" /><div><b>{n(r => r.status === "Awaiting Clarification")} request(s) need your answer.</b> Open the request to reply to the clarification.</div></div>
+      ) : n(r => r.requester_id === me.id && r.status === "Awaiting Clarification") > 0 && (
+        <div className="banner warn"><Icon name="info" /><div><b>{n(r => r.requester_id === me.id && r.status === "Awaiting Clarification")} request(s) need your answer.</b> Open the request to reply to the clarification.</div></div>
       )}
-      <SupportTable rows={rows} monitor={monitor} />
+      <SupportTable rows={rows} monitor={monitor || aso} />
     </>
   );
 }

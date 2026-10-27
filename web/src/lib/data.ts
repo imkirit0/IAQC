@@ -2,7 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
 import { inScope, type Me } from "./auth";
-import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor } from "./support";
+import { DEFAULT_DEPARTMENTS, DIRECTORY, distanceM, lateness, type Actor, type DirKind } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
@@ -222,8 +222,8 @@ export function actorsOn(me: Me, r: Pick<SupportRow, "requester_id" | "assigned_
   if (me.role === "dept" && inScope(me, district) && (r.assignee_id === me.id || (!!me.department && r.assigned_department === me.department))) a.push("dept");
   return a;
 }
-/** IAQA and CMD (not district ASO accounts) monitor every request; everyone else only those they act on. */
-export const canSeeRequest = (me: Me, r: SupportItem) => me.role === "iaqc" || (me.role === "cmd" && !me.district) || actorsOn(me, r, r.district).length > 0;
+/** IAQA and CMD monitor every request, ASO Directors those for their district's centres; everyone else only those they act on. */
+export const canSeeRequest = (me: Me, r: SupportItem) => me.role === "iaqc" || (me.role === "cmd" && inScope(me, r.district)) || actorsOn(me, r, r.district).length > 0;
 
 async function enrich(rows: SupportRow[], reassigns: Map<number, number> = new Map()): Promise<SupportItem[]> {
   const [ps, cs] = await Promise.all([db().from("profiles").select("id, name, role"), db().from("centres").select("id, name, code, district")]);
@@ -273,5 +273,21 @@ export async function supportInbox(me: Me) {
   if (me.role === "iaqc") return n(r => ["Submitted", "Under Review", "Rejected", "Completed - Awaiting Verification"].includes(r.status) || r.overdue);
   if (me.role === "dept") return n(r => r.status === "Assigned" || r.overdue);
   if (me.role === "cmd" && !me.district) return n(r => r.overdue);
-  return n(r => r.status === "Awaiting Clarification");
+  return n(r => r.requester_id === me.id && r.status === "Awaiting Clarification");
+}
+
+// ---------- contact directories ----------
+
+export type DirEntry = { id: number; kind: DirKind; name: string; phone: string; email: string; district: string | null; notes: string; updated_at: string };
+
+/** IAQA edits every list; a department in-charge edits its department's list (within its district, if it has one). */
+export const canEditDir = (me: Me, kind: DirKind) => me.role === "iaqc" || (me.role === "dept" && me.department === DIRECTORY[kind].dept);
+
+/** Entries for all districts plus the viewer's own: an AC's are those of their centres, district accounts their district. */
+export async function getDirectory(me: Me) {
+  const [rs, cs] = await Promise.all([db().from("directory").select("*").order("name"), db().from("centres").select("district, ac_id").eq("active", true)]);
+  const centres = must(cs) as { district: string; ac_id: string | null }[];
+  const mine = me.role === "ac" ? new Set(centres.filter(c => c.ac_id === me.id).map(c => c.district.toLowerCase())) : me.district ? new Set([me.district.toLowerCase()]) : null;
+  const entries = (must(rs) as DirEntry[]).filter(e => !mine || !e.district || mine.has(e.district.toLowerCase()));
+  return { entries, districts: [...new Set(centres.map(c => c.district))].sort() };
 }

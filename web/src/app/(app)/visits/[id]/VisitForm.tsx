@@ -126,9 +126,8 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
           return (
             <div key={c.id} className={`crit-card${r.status && !answered(c) ? " missing" : ""}`}>
               <div className="q">{c.text}</div>
-              {c.description && <div className="small muted" style={{ marginTop: 2 }}>{c.description}</div>}
+              {c.description && <details className="small muted" style={{ marginTop: 2 }}><summary>Guidelines</summary>{c.description}</details>}
               <div className="row" style={{ gap: 6, marginTop: 8 }}>
-                <span className={`chip ${c.priority}`}>{c.priority} priority</span>
                 {c.critical && <span className="chip crit">Critical item</span>}
                 {c.mandatory && <span className="chip mand">Mandatory</span>}
               </div>
@@ -173,7 +172,7 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
         <div className="hd"><h2>Final review</h2></div>
         <div className="bd">
           {missing.length
-            ? <div className="banner warn"><Icon name="alert" /><div><b>{missing.length} item{missing.length === 1 ? " needs" : "s need"} attention before submission.</b><br />Every criterion must be answered. Remarks are required for Non-Compliant responses and for Partially Compliant responses on Critical or High priority items.</div></div>
+            ? <div className="banner warn"><Icon name="alert" /><div><b>{missing.length} item{missing.length === 1 ? " needs" : "s need"} attention before submission.</b><br />Every criterion must be answered. Remarks are required for Non-Compliant responses, and for Partially Compliant responses where the form marks them Required.</div></div>
             : <div className="banner info"><Icon name="tick" /><div>All criteria are complete. Check your answers below, then submit.</div></div>}
           <div className="row small" style={{ gap: 18, marginBottom: 14 }}>{OPTIONS.map(k => <span key={k} className={`st-${k}`}>{STATUS_LABEL[k]}: {cnt[k]}</span>)}</div>
           {secs.map((s, i) => (

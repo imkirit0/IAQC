@@ -12,10 +12,10 @@ import { initials } from "@/lib/format";
 type Role = "ac" | "iaqc" | "cmd" | "dept";
 const NAV: Record<Role, [string, string, IconName][]> = {
   iaqc: [["/ranking", "Risk ranking", "dash"], ["/assessments", "Assessments", "list"], ["/support", "Support", "inbox"], ["/admin/centres", "Centres", "centre"], ["/admin/users", "Users", "users"],
-         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"]],
-  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"]],
-  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"]],
-  dept: [["/support", "Assigned requests", "inbox"]],
+         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"], ["/directory", "Directory", "users"]],
+  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"], ["/directory", "Directory", "users"]],
+  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"], ["/directory", "Directory", "users"]],
+  dept: [["/support", "Assigned requests", "inbox"], ["/directory", "Directory", "users"]],
 };
 const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin", dept: "Department In-Charge" };
 
