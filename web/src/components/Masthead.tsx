@@ -8,20 +8,24 @@ import { ThemeSwitch } from "./ThemeSwitch";
 import { ChangePassword } from "./ChangePassword";
 import { logout } from "@/app/actions";
 import { initials } from "@/lib/format";
+import { DIRECTORY } from "@/lib/support";
 
 type Role = "ac" | "iaqc" | "cmd" | "dept";
 const NAV: Record<Role, [string, string, IconName][]> = {
   iaqc: [["/ranking", "Risk ranking", "dash"], ["/assessments", "Assessments", "list"], ["/support", "Support", "inbox"], ["/admin/centres", "Centres", "centre"], ["/admin/users", "Users", "users"],
-         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"], ["/directory", "Directory", "users"]],
-  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"], ["/directory", "Directory", "users"]],
-  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"], ["/directory", "Directory", "users"]],
-  dept: [["/support", "Assigned requests", "inbox"], ["/directory", "Directory", "users"]],
+         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"], ["/directory", "Directory", "users"], ["/sharing", "Info sharing", "share"]],
+  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"], ["/directory", "Directory", "users"], ["/sharing", "Info sharing", "share"]],
+  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"], ["/sharing", "Info sharing", "share"], ["/directory", "Directory", "users"]],
+  dept: [["/support", "Assigned requests", "inbox"], ["/sharing", "Info sharing", "share"], ["/directory", "Directory", "users"]],
 };
 const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin", dept: "Department In-Charge" };
 
-/** inbox = support requests waiting on this user (overdue ones, for CMD), shown as a count on the Support tab. */
-export function Masthead({ me, inbox }: { me: { name: string; username: string; role: Role; district: string | null; department: string | null }; inbox: number }) {
+/** inbox = support requests waiting on this user (overdue ones, for CMD), shown as a count on the Support tab; shares = items waiting for their acceptance. */
+export function Masthead({ me, inbox, shares }: { me: { name: string; username: string; role: Role; district: string | null; department: string | null }; inbox: number; shares: number }) {
   const path = usePathname();
+  // District PROs have no Directory (the page refuses them too).
+  const nav = NAV[me.role].filter(([href]) => !(href === "/directory" && me.role === "dept" && me.department === DIRECTORY.pro.dept));
+  const counts: Record<string, number> = { "/support": inbox, "/sharing": shares };
   const role = me.department ? `${me.department} In-Charge${me.district ? `, ${me.district}` : ""}` : me.district ? `ASO Director, ${me.district}` : ROLE_LABEL[me.role];
   const [open, setOpen] = useState(false), [pw, setPw] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -44,10 +48,10 @@ export function Masthead({ me, inbox }: { me: { name: string; username: string; 
           <img src="/brand/gtec-logo.png" alt="G-TEC Education" width={50} height={34} />
           <b>IAQA</b><small>Internal Audit<br />&amp; Quality Assurance</small>
         </Link>
-        <nav className={`nav${NAV[me.role].length > 5 ? " many" : ""}`} aria-label="Main">
-          {NAV[me.role].map(([href, label, icon]) => (
+        <nav className={`nav${nav.length > 5 ? " many" : ""}`} aria-label="Main">
+          {nav.map(([href, label, icon]) => (
             <Link key={href} href={href} className={active(href) ? "on" : ""} aria-current={active(href) ? "page" : undefined}>
-              <Icon name={icon} />{label}{href === "/support" && inbox > 0 && <span className="count" title={`${inbox} need attention`}>{inbox}</span>}
+              <Icon name={icon} />{label}{counts[href] > 0 && <span className="count" title={`${counts[href]} need attention`}>{counts[href]}</span>}
               {active(href) && <motion.span layoutId="nav-ind" className="nav-ind" transition={{ type: "spring", stiffness: 480, damping: 40 }} />}
             </Link>
           ))}

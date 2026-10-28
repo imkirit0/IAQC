@@ -59,10 +59,27 @@ centres — from **My support requests**, from a centre card, or straight after 
   *Overdue* is a flag beside the status, derived from the deadlines. The masthead shows a count of requests waiting on the user.
 - Every step writes a row to `support_events`; a trigger makes that history append-only, and another keeps the original request text unchangeable.
 
+## Directory and information sharing
+
+- **Directory** (PROs, trainers, placement officers): Area Coordinators add and edit entries, but each change waits as *Pending* until the IAQA
+  Coordinator verifies it (or rejects it with a remark the coordinator sees and can correct). Until then the verified version stays listed.
+  IAQA edits directly. Other roles read verified entries only. District PROs (in-charges of the PRO department) have no Directory access.
+- **Information sharing**: a PRO sends an item (subject, remarks) to an Area Coordinator or the other way round; the recipient accepts it, optionally
+  with a reply. Items are never edited after sending (a trigger enforces it); only IAQA can delete one. Every user can read and filter the history.
+  The tab shows a count of items waiting for the user's acceptance.
+
+## Deleting users and centres
+
+Delete deactivates by default: the user loses access on their next request, and their records keep their name. Restore reactivates.
+Permanent deletion is allowed only when nothing refers to the account (or, for a centre, when it has no visit reports or support requests).
+IAQA and CMD system accounts cannot be deleted. ASO Directors are added from the Centres tab, with a unique mobile number and email.
+
 ## Visit location
 
 Submitting a visit report captures one GPS fix from the device (latitude, longitude, accuracy, fix time). The server accepts it only if it is
-less than 10 minutes old. If location fails, the coordinator sees why and can retry, or (unless Settings require location) submit the report marked
+less than 10 minutes old, measured from its own receive time and the fix's age on the device's own clock (so a device with a
+wrong clock or time zone still passes). The browser is asked for a fresh fix, never a cached one, with 20 seconds to find it (Windows laptops locate
+through Wi-Fi). Rejected fixes are logged with the device and browser. If location fails, the coordinator sees why and can retry, or (unless Settings require location) submit the report marked
 *unverified* with a reason. Coordinates are never filled in from the centre's own location. If a centre has registered coordinates (Centres → Edit),
 IAQA and CMD see the distance on the scorecard and a flag beyond the configured threshold. A flag means the visit needs review; it does not prove anything.
 

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { authClient, db } from "./supabase";
+import { DIRECTORY } from "./support";
 
 export type Role = "ac" | "iaqc" | "cmd" | "dept";
 export type Me = { id: string; username: string; name: string; role: Role; district: string | null; department: string | null };
@@ -34,6 +35,9 @@ export const canRequest = (me: Me) => me.role === "ac" || (me.role === "cmd" && 
 
 /** Where people were when they submitted: IAQA and CMD only (not district ASO accounts). */
 export const seesLocation = (me: Me) => me.role === "iaqc" || (me.role === "cmd" && !me.district);
+
+/** District PROs: the in-charges of the PRO department. They share information with Area Coordinators but cannot open the Directory. */
+export const isPro = (me: Pick<Me, "role" | "department">) => me.role === "dept" && me.department === DIRECTORY.pro.dept;
 
 export class Forbidden extends Error {}
 

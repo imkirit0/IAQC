@@ -2,16 +2,17 @@
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { useState } from "react";
-import { createUser, resetPassword, updateUser } from "@/app/actions";
+import { createUser, deleteUser, resetPassword, updateUser } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 import { Modal, formData } from "@/components/Modal";
 import { useToast } from "@/components/Providers";
 import { PageHead } from "@/components/ui";
 import { initials } from "@/lib/format";
 
-type User = { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd" | "dept"; area: string; district: string | null; department: string | null; active: boolean; centres: { id: number; code: string }[] };
+type User = { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd" | "dept"; area: string; district: string | null; department: string | null; phone?: string | null; email?: string | null; active: boolean; centres: { id: number; code: string }[] };
 type CentreLite = { id: number; code: string; name: string; district: string; ac_id: string | null; ac_name: string | null };
 const ROLE = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin", dept: "Department In-Charge" };
+const roleOf = (u: User) => (u.role === "dept" ? `In-Charge, ${u.department}` : u.district ? "ASO Director" : ROLE[u.role]);
 const tempPassword = () => "Temp@" + Math.random().toString(36).slice(2, 8) + Math.floor(Math.random() * 90 + 10);
 
 /** ASO chips select whole areas; the grouped list fine-tunes single centres. The area text is derived from the selection. */
@@ -95,10 +96,11 @@ const pickedIds = (f: HTMLFormElement) => [...f.querySelectorAll<HTMLInputElemen
 
 export function UsersManager({ users, centres, departments }: { users: User[]; centres: CentreLite[]; departments: string[] }) {
   const router = useRouter(), toast = useToast();
-  const [creatingAso, setCreatingAso] = useState(false), [editingAso, setEditingAso] = useState<User | null>(null);
+  const [editingAso, setEditingAso] = useState<User | null>(null);
   const [creatingDept, setCreatingDept] = useState(false), [editingDept, setEditingDept] = useState<User | null>(null);
   const asos = [...new Set(centres.map(c => c.district))].sort();
   const [creating, setCreating] = useState(false), [editing, setEditing] = useState<User | null>(null), [resetting, setResetting] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState<User | null>(null);
   const done = (msg: string) => { toast(msg); router.refresh(); };
 
   async function toggle(u: User) {
@@ -109,9 +111,8 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
 
   return (
     <>
-      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors get read-only access to one district. Department in-charges (e.g. a district's PRO) see only support requests assigned to their department from centres in their district. IAQA and CMD are fixed system accounts.">
+      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors (added under Centres) get read-only access to one district. Department in-charges (e.g. a district's PRO) see only support requests assigned to their department from centres in their district. IAQA and CMD are fixed system accounts.">
         <button className="btn" onClick={() => setCreatingDept(true)}><Icon name="plus" />New Department In-Charge</button>
-        <button className="btn" onClick={() => setCreatingAso(true)}><Icon name="plus" />New ASO Director</button>
         <button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New Area Coordinator</button>
       </PageHead>
       <div className="card"><div className="tw"><table>
@@ -119,11 +120,11 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
         <tbody>{users.map((u, i) => (
           <motion.tr key={u.id} className={u.active ? "" : "inactive"} initial={{ opacity: 0, y: 6 }} animate={{ opacity: u.active ? 1 : 0.55, y: 0 }} transition={{ delay: i * 0.03 }}>
             <td data-l="Name"><div className="row" style={{ gap: 10, flexWrap: "nowrap" }}><span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{initials(u.name)}</span><b>{u.name}</b></div></td>
-            <td data-l="Username" className="muted">{u.username}</td><td data-l="Role">{u.role === "dept" ? `In-Charge, ${u.department}` : u.district ? "ASO Director" : ROLE[u.role]}</td><td data-l="Area" className="small">{u.area}</td>
+            <td data-l="Username" className="muted">{u.username}</td><td data-l="Role">{roleOf(u)}</td><td data-l="Area" className="small">{u.area}</td>
             <td data-l="Assigned centres" className="small">{u.role === "ac" ? (u.centres.map(c => c.code).join(", ") || <span className="faint">None</span>) : <span className="faint">{u.role === "dept" ? `Support requests, ${u.district ?? "all districts"}` : u.district ? `All in ${u.district}` : "All (role-based)"}</span>}</td>
             <td data-l="Status">{u.active ? <span className="badge b-green">Active</span> : <span className="badge b-grey">Inactive</span>}</td>
             <td data-l="" className="nowrap right">{u.role === "ac" || u.role === "dept" || u.district ? <>
-              <button className="btn sm quiet" onClick={() => toggle(u)}>{u.active ? "Deactivate" : "Activate"}</button>{" "}
+              {u.active ? <button className="btn sm quiet" onClick={() => setDeleting(u)}>Delete</button> : <button className="btn sm quiet" onClick={() => toggle(u)}>Restore</button>}{" "}
               <button className="btn sm" onClick={() => setResetting(u)}>Reset password</button>{" "}
               <button className="btn sm" onClick={() => u.role === "dept" ? setEditingDept(u) : u.district ? setEditingAso(u) : setEditing(u)}>Edit</button>
             </> : <span className="small faint">System account</span>}</td>
@@ -158,29 +159,19 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
         </>}
       </Modal>
 
-      <Modal open={creatingAso} onClose={() => setCreatingAso(false)} title="New ASO Director" submitLabel="Create account" onSubmit={async f => {
-        const v = formData(f);
-        const r = await createUser({ username: v.username, name: v.name, area: "", password: v.password, centre_ids: [], district: v.district });
-        if (r.error) return r.error;
-        done("ASO Director created");
-      }}>
-        <div className="grid2">
-          <label className="f"><span>Full name</span><input name="name" required /></label>
-          <label className="f"><span>Username</span><input name="username" required pattern="[A-Za-z0-9._]+" placeholder="e.g. aso.mlp" autoCapitalize="none" /></label>
-        </div>
-        <AsoSelect asos={asos} />
-        <label className="f"><span>Temporary password (share it securely)</span><input name="password" required minLength={8} defaultValue={creatingAso ? tempPassword() : ""} /></label>
-      </Modal>
-
       <Modal open={!!editingAso} onClose={() => setEditingAso(null)} title="Edit ASO Director" onSubmit={async f => {
         const v = formData(f);
-        const r = await updateUser(editingAso!.id, { name: v.name, area: "", active: v.active === "on", district: v.district });
+        const r = await updateUser(editingAso!.id, { name: v.name, area: "", active: v.active === "on", district: v.district, phone: v.phone, email: v.email });
         if (r.error) return r.error;
         done("User updated");
       }}>
         {editingAso && <>
           <label className="f"><span>Full name</span><input name="name" required defaultValue={editingAso.name} /></label>
           <AsoSelect asos={asos} value={editingAso.district ?? undefined} />
+          <div className="grid2">
+            <label className="f"><span>Mobile number</span><input name="phone" type="tel" defaultValue={editingAso.phone ?? ""} /></label>
+            <label className="f"><span>Email</span><input name="email" type="email" defaultValue={editingAso.email ?? ""} /></label>
+          </div>
           <label className="check"><input type="checkbox" name="active" defaultChecked={editingAso.active} /> Active account</label>
         </>}
       </Modal>
@@ -209,6 +200,24 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
           <label className="f"><span>Full name</span><input name="name" required defaultValue={editingDept.name} /></label>
           <div className="grid2"><DeptSelect departments={departments} value={editingDept.department ?? undefined} /><DeptDistrict asos={asos} value={editingDept.district ?? undefined} /></div>
           <label className="check"><input type="checkbox" name="active" defaultChecked={editingDept.active} /> Active account</label>
+        </>}
+      </Modal>
+
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title={`Delete ${deleting?.name ?? ""}?`} submitLabel="Deactivate account" onSubmit={async () => {
+        const r = await updateUser(deleting!.id, { name: deleting!.name, area: deleting!.area, active: false });
+        if (r.error) return r.error;
+        done(`${deleting!.name} deactivated`);
+      }}>
+        {deleting && <>
+          <p><b>{deleting.name}</b> · {roleOf(deleting)} · {deleting.username}</p>
+          <p className="small muted">Deactivating signs the user out at once and blocks sign-in. Their visit reports, support requests, Directory submissions and shared items stay, with their name. You can restore the account later.</p>
+          <p className="small muted">Permanent deletion is possible only for an account with no linked records.</p>
+          <button type="button" className="btn sm quiet" onClick={async () => {
+            if (!window.confirm(`Permanently delete ${deleting.name}? This cannot be undone.`)) return;
+            const r = await deleteUser(deleting.id);
+            if (r.error) return toast(r.error, true);
+            setDeleting(null); done(`${deleting.name} permanently deleted`);
+          }}>Delete permanently instead</button>
         </>}
       </Modal>
 

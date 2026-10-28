@@ -9,7 +9,7 @@ export const metadata = { title: "Users" };
 async function UsersPage() {
   await requireRole("iaqc");
   const [users, centres, st] = await Promise.all([getUsers(), getCentres(), getSettings()]);
-  return <UsersManager users={users} centres={centres.map(c => ({ id: c.id, code: c.code, name: c.name, district: c.district, ac_id: c.ac_id, ac_name: c.ac_name ?? null }))} departments={st.departments} />;
+  return <UsersManager users={users} centres={centres.filter(c => c.active).map(c => ({ id: c.id, code: c.code, name: c.name, district: c.district, ac_id: c.ac_id, ac_name: c.ac_name ?? null }))} departments={st.departments} />;
 }
 
 // Data streams in behind a skeleton so navigation to this page is instant.

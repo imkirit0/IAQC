@@ -1,8 +1,8 @@
 import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
-import { inScope, seesLocation, type Me } from "./auth";
-import { DEFAULT_DEPARTMENTS, DIRECTORY, distanceM, lateness, type Actor, type DirKind } from "./support";
+import { inScope, isPro, seesLocation, type Me } from "./auth";
+import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
@@ -185,11 +185,11 @@ export async function getScorecard(centreId: number) {
 }
 
 export async function getUsers() {
-  const [ps, cs, au] = await Promise.all([db().from("profiles").select("id, username, name, role, area, active, created_at, department").order("role").order("name"), db().from("centres").select("id, code, name, ac_id"),
+  const [ps, cs, au] = await Promise.all([db().from("profiles").select("id, username, name, role, area, active, created_at, department, phone, email").order("role").order("name"), db().from("centres").select("id, code, name, ac_id"),
     db().auth.admin.listUsers({ perPage: 1000 })]); // ponytail: single page of auth users; paginate past 1000 accounts
   const centres = must(cs) as { id: number; code: string; name: string; ac_id: string | null }[];
   const district = new Map(au.data.users.map(u => [u.id, (u.app_metadata?.district as string) || null]));
-  return (must(ps) as { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd" | "dept"; area: string; active: boolean; created_at: string; department: string | null }[])
+  return (must(ps) as { id: string; username: string; name: string; role: "ac" | "iaqc" | "cmd" | "dept"; area: string; active: boolean; created_at: string; department: string | null; phone: string | null; email: string | null }[])
     .map(u => ({ ...u, district: district.get(u.id) ?? null, centres: centres.filter(c => c.ac_id === u.id) }));
 }
 
@@ -281,15 +281,58 @@ export async function supportInbox(me: Me) {
 // ---------- contact directories ----------
 
 export type DirEntry = { id: number; kind: DirKind; name: string; phone: string; email: string; district: string | null; notes: string; updated_at: string };
+export type DirChange = Omit<DirEntry, "id" | "updated_at"> & { id: number; entry_id: number | null; status: "Pending" | "Verified" | "Rejected"; submitted_by: string; submitted_at: string;
+  reviewed_by: string | null; reviewed_at: string | null; remark: string; by?: string; reviewer?: string };
 
-/** IAQA edits every list; a department in-charge edits its department's list (within its district, if it has one). */
-export const canEditDir = (me: Me, kind: DirKind) => me.role === "iaqc" || (me.role === "dept" && me.department === DIRECTORY[kind].dept);
+/** Districts of an Area Coordinator's active centres: the ones whose Directory entries they may propose. */
+export async function acDistricts(acId: string) {
+  const cs = must(await db().from("centres").select("district").eq("ac_id", acId).eq("active", true)) as { district: string }[];
+  return [...new Set(cs.map(c => c.district))].sort();
+}
 
-/** Entries for all districts plus the viewer's own: an AC's are those of their centres, district accounts their district. */
+/** Verified entries for all districts plus the viewer's own: an AC's are those of their centres, district accounts their district.
+ *  IAQA also gets submissions to verify, an Area Coordinator their own submissions. */
 export async function getDirectory(me: Me) {
-  const [rs, cs] = await Promise.all([db().from("directory").select("*").order("name"), db().from("centres").select("district, ac_id").eq("active", true)]);
+  const changes = me.role === "iaqc" || me.role === "ac"
+    ? (me.role === "ac" ? db().from("directory_changes").select("*").eq("submitted_by", me.id) : db().from("directory_changes").select("*")).order("id", { ascending: false }).limit(300)
+    : null; // ponytail: latest 300 submissions; page them if IAQA needs the older history on screen (audit log keeps it all)
+  const [rs, cs, ch, names] = await Promise.all([db().from("directory").select("*").order("name"), db().from("centres").select("district, ac_id").eq("active", true), changes, profileNames()]);
   const centres = must(cs) as { district: string; ac_id: string | null }[];
-  const mine = me.role === "ac" ? new Set(centres.filter(c => c.ac_id === me.id).map(c => c.district.toLowerCase())) : me.district ? new Set([me.district.toLowerCase()]) : null;
+  const own = me.role === "ac" ? [...new Set(centres.filter(c => c.ac_id === me.id).map(c => c.district))].sort() : null;
+  const mine = own ? new Set(own.map(d => d.toLowerCase())) : me.district ? new Set([me.district.toLowerCase()]) : null;
   const entries = (must(rs) as DirEntry[]).filter(e => !mine || !e.district || mine.has(e.district.toLowerCase()));
-  return { entries, districts: [...new Set(centres.map(c => c.district))].sort() };
+  const submissions = ch ? (must(ch) as DirChange[]).map(c => ({ ...c, by: names.get(c.submitted_by) ?? "—", reviewer: c.reviewed_by ? names.get(c.reviewed_by) ?? "—" : undefined })) : [];
+  return { entries, submissions, districts: own ?? [...new Set(centres.map(c => c.district))].sort() };
+}
+
+// ---------- information sharing (PRO <-> Area Coordinator) ----------
+
+export type Share = { id: number; sender_id: string; recipient_id: string; subject: string; remarks: string; sent_at: string; accepted_at: string | null; reply: string;
+  from: string; from_role: string; to: string; to_role: string };
+
+async function people() {
+  const ps = must(await db().from("profiles").select("id, name, role, department, active").order("name")) as { id: string; name: string; role: string; department: string | null; active: boolean }[];
+  return ps.map(p => ({ ...p, pro: isPro(p as Pick<Me, "role" | "department">) }));
+}
+const roleName = (p?: { role: string; pro: boolean }) => (!p ? "" : p.pro ? "PRO" : p.role === "ac" ? "Area Coordinator" : "");
+
+/** The whole history, newest first: every signed-in user may read it. */
+// ponytail: loads every item; add server-side paging once the history runs to thousands
+export async function getShares(): Promise<Share[]> {
+  const [rs, ps] = await Promise.all([db().from("info_shares").select("*").order("id", { ascending: false }), people()]);
+  const by = new Map(ps.map(p => [p.id, p]));
+  return (must(rs) as Omit<Share, "from" | "from_role" | "to" | "to_role">[]).map(r => ({ ...r,
+    from: by.get(r.sender_id)?.name ?? "—", from_role: roleName(by.get(r.sender_id)), to: by.get(r.recipient_id)?.name ?? "—", to_role: roleName(by.get(r.recipient_id)) }));
+}
+
+/** Who this user may send to: PROs to Area Coordinators and back. Empty for everyone else (read-only). */
+export async function shareRecipients(me: Me) {
+  if (me.role !== "ac" && !isPro(me)) return [];
+  return (await people()).filter(p => p.active && p.id !== me.id && (me.role === "ac" ? p.pro : p.role === "ac")).map(p => ({ id: p.id, name: p.name }));
+}
+
+/** Items waiting for this user's acceptance: the count on the Information sharing tab. */
+export async function sharingInbox(me: Me) {
+  const { count } = await db().from("info_shares").select("id", { count: "exact", head: true }).eq("recipient_id", me.id).is("accepted_at", null);
+  return count ?? 0;
 }

@@ -1,9 +1,10 @@
 "use server";
 import { refresh } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { audit, canRequest, Forbidden, guard, HOME, usernameToEmail, type Me } from "@/lib/auth";
+import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { actorsOn, canEditDir, getSettings, makeSnapshot, type SupportRow } from "@/lib/data";
+import { acDistricts, actorsOn, getSettings, makeSnapshot, type DirChange, type SupportRow } from "@/lib/data";
 import { ACTIONS, CATEGORIES, can, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
@@ -138,7 +139,7 @@ export async function saveCentre(id: number | null, input: { code: string; name:
     }
     if (id) await ok(db().from("centres").update(row).eq("id", id));
     else await ok(db().from("centres").insert(row));
-    await audit(me, id ? "CENTRE_UPDATED" : "CENTRE_CREATED", `${row.code} ${row.name} active=${row.active}`);
+    await audit(me, !id ? "CENTRE_CREATED" : row.active ? "CENTRE_UPDATED" : "CENTRE_ARCHIVED", `${row.code} ${row.name} active=${row.active}`);
   });
 }
 
@@ -165,7 +166,20 @@ async function validDepartment(d: string) {
   return dep;
 }
 
-export async function createUser(input: { username: string; name: string; area: string; password: string; centre_ids: number[]; district?: string; department?: string }) {
+/** ASO Directors' mobile and email: optional, valid, and not used by another account. */
+async function contact(input: { phone?: string; email?: string }, self?: string) {
+  const phone = clean(input.phone, 20).replace(/[\s-]/g, "") || null, email = clean(input.email, 120).toLowerCase() || null;
+  check(!phone || /^\+?\d{10,15}$/.test(phone), "Enter a valid mobile number (10 to 15 digits).");
+  check(!email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email), "Email address is invalid.");
+  for (const [col, v, label] of [["phone", phone, "mobile number"], ["email", email, "email address"]] as const) {
+    if (!v) continue;
+    const { data } = await db().from("profiles").select("id").eq(col, v).neq("id", self ?? "00000000-0000-0000-0000-000000000000").limit(1);
+    check(!data?.length, `Another account already uses this ${label}.`);
+  }
+  return { phone, email };
+}
+
+export async function createUser(input: { username: string; name: string; area: string; password: string; centre_ids: number[]; district?: string; department?: string; phone?: string; email?: string }) {
   return run(async () => {
     const me = await guard("iaqc");
     const username = clean(input.username, 60).toLowerCase();
@@ -176,9 +190,11 @@ export async function createUser(input: { username: string; name: string; area: 
     check(!dup, "That username is already taken.");
     const district = input.district ? await validDistrict(clean(input.district, 80)) : null;
     const department = input.department ? await validDepartment(input.department) : null;
+    const reach = district && !department ? await contact(input) : null;
+    check(!reach || (reach.phone && reach.email), "Enter the ASO's mobile number and email.");
     const created = await ok(db().auth.admin.createUser({ email: usernameToEmail(username), password: input.password, email_confirm: true, ...(district && { app_metadata: { district } }) }));
     const p = await db().from("profiles").insert({ id: created.user!.id, username, name: clean(input.name, 100), role: department ? "dept" : district ? "cmd" : "ac",
-      area: department ? (district ? `${department}, ${district}` : department) : district ?? clean(input.area, 100), department });
+      area: department ? (district ? `${department}, ${district}` : department) : district ?? clean(input.area, 100), department, ...reach });
     if (p.error) { await db().auth.admin.deleteUser(created.user!.id); throw new Error(p.error.message); }
     if (department) return void await audit(me, "USER_CREATED", `${username} (Department In-Charge, ${department}, ${district ?? "all districts"})`);
     if (district) return void await audit(me, "USER_CREATED", `${username} (ASO Director, ${district})`);
@@ -187,7 +203,7 @@ export async function createUser(input: { username: string; name: string; area: 
   });
 }
 
-export async function updateUser(id: string, input: { name: string; area: string; active: boolean; centre_ids?: number[]; district?: string; department?: string }) {
+export async function updateUser(id: string, input: { name: string; area: string; active: boolean; centre_ids?: number[]; district?: string; department?: string; phone?: string; email?: string }) {
   return run(async () => {
     const me = await guard("iaqc");
     const { data: u } = await db().from("profiles").select("username, role, department").eq("id", id).maybeSingle();
@@ -206,9 +222,10 @@ export async function updateUser(id: string, input: { name: string; area: string
       area = await validDistrict(clean(input.district, 80));
       await ok(db().auth.admin.updateUserById(id, { app_metadata: { district: area } }));
     } else if (aso) area = aso;
-    await ok(db().from("profiles").update({ name: clean(input.name, 100), area, active: input.active }).eq("id", id));
+    const reach = aso && (input.phone !== undefined || input.email !== undefined) ? await contact(input, id) : {};
+    await ok(db().from("profiles").update({ name: clean(input.name, 100), area, active: input.active, ...reach }).eq("id", id));
     if (!aso) await assignCentres(id, input.centre_ids);
-    await audit(me, "USER_UPDATED", `${u!.username} active=${input.active}`);
+    await audit(me, input.active ? "USER_UPDATED" : "USER_DEACTIVATED", `${u!.username} active=${input.active}`);
   });
 }
 
@@ -220,6 +237,34 @@ export async function resetPassword(id: string, password: string) {
     check(u?.role === "ac" || u?.role === "dept" || (u?.role === "cmd" && await asoDistrict(id)), "Account not found.");
     await ok(db().auth.admin.updateUserById(id, { password }));
     await audit(me, "PASSWORD_RESET", u!.username);
+  });
+}
+
+/** Permanent deletion, only for accounts nothing refers to; otherwise the user is deactivated instead (their records keep their name).
+ *  IAQA and CMD system accounts are never deletable, so IAQA can neither delete itself nor the last IAQA account. */
+export async function deleteUser(id: string) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const { data: u } = await db().from("profiles").select("username, name, role").eq("id", id).maybeSingle();
+    check(u && (u.role === "ac" || u.role === "dept" || (u.role === "cmd" && await asoDistrict(id))), "Only Area Coordinator, ASO Director and Department In-Charge accounts can be deleted.");
+    const { error } = await db().from("profiles").delete().eq("id", id); // assigned centres become unassigned (on delete set null)
+    if (error?.code === "23503") throw new Invalid("This user has linked records and cannot be permanently deleted. Deactivate instead.");
+    if (error) throw new Error(error.message);
+    await ok(db().auth.admin.deleteUser(id));
+    await audit(me, "USER_DELETED", `${u.username} (${u.name}, ${u.role})`);
+  });
+}
+
+/** Permanent deletion of a centre that has no visit reports or support requests; otherwise it must be archived (deactivated). */
+export async function deleteCentre(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const { data: c } = await db().from("centres").select("code, name").eq("id", id).maybeSingle();
+    check(c, "Centre not found.");
+    const { error } = await db().from("centres").delete().eq("id", id);
+    if (error?.code === "23503") throw new Invalid("This centre has linked records (visit reports or support requests). Archive it instead.");
+    if (error) throw new Error(error.message);
+    await audit(me, "CENTRE_DELETED", `${c.code} ${c.name}`);
   });
 }
 
@@ -238,16 +283,18 @@ export async function setRiskLevel(assessmentId: number, input: { category: stri
 
 // ---------- assessments ----------
 
-type GpsFix = { lat: number; lng: number; accuracy: number | null; at: string };
+/** age = ms between the fix and sending it, measured on the device's own clock, so a wrong device clock or time zone cannot fail it. */
+type GpsFix = { lat: number; lng: number; accuracy: number | null; age: number };
 const GPS_MAX_AGE_MS = 10 * 60e3;
 
-/** A real, recent device fix as columns; never substituted with a registered point. */
+/** A real, recent device fix as columns; never substituted with a registered point. Capture time is the server's receive time minus the age. */
 function fixFields(g: GpsFix) {
-  const age = Date.now() - Date.parse(g.at);
   check(Number.isFinite(g.lat) && Number.isFinite(g.lng) && Math.abs(g.lat) <= 90 && Math.abs(g.lng) <= 180 && (g.accuracy == null || (Number.isFinite(g.accuracy) && g.accuracy >= 0)), "The captured location is invalid. Capture it again.");
-  check(age > -120e3 && age < GPS_MAX_AGE_MS, "The captured location is out of date. Capture it again.");
-  return { gps_lat: g.lat, gps_lng: g.lng, gps_accuracy: g.accuracy == null ? null : Math.round(g.accuracy), gps_at: new Date(g.at).toISOString(), gps_reason: null };
+  check(Number.isFinite(g.age) && g.age < GPS_MAX_AGE_MS, "The captured location is out of date. Capture it again.");
+  return { gps_lat: g.lat, gps_lng: g.lng, gps_accuracy: g.accuracy == null ? null : Math.round(g.accuracy), gps_at: new Date(Date.now() - Math.max(0, g.age)).toISOString(), gps_reason: null };
 }
+/** Device and browser, for diagnosing location failures. */
+const device = async () => clean((await headers()).get("user-agent"), 200);
 /** Support submissions record where they were made, or why that is unknown; a missing location never blocks them. */
 export type Located = { gps?: GpsFix | null; gps_reason?: string };
 const located = (l: Located = {}) => (l.gps ? fixFields(l.gps) : { gps_reason: clean(l.gps_reason, 300) || "Location not provided" });
@@ -262,8 +309,10 @@ export async function submitAssessment(input: { centre_id: number; visit_date: s
     // Location: verified only with a real, recent device fix; never substituted with the centre's registered point.
     const g = input.gps, st = await getSettings();
     let gps: Record<string, unknown>;
-    if (g) gps = { gps_status: "verified", ...fixFields(g) };
-    else {
+    if (g) {
+      try { gps = { gps_status: "verified", ...fixFields(g) }; }
+      catch (e) { await audit(me, "LOCATION_REJECTED", `${c!.code} age=${Math.round(g.age / 1000)}s accuracy=${g.accuracy ?? "?"} ${(e as Error).message} | ${await device()}`); throw e; }
+    } else {
       check(!st.gps_required, "Your current location is required to submit this report. Allow location access and try again.");
       check(clean(input.gps_reason), "Explain why your location could not be captured.");
       gps = { gps_status: "unavailable", gps_reason: clean(input.gps_reason, 500) };
@@ -277,7 +326,7 @@ export async function submitAssessment(input: { centre_id: number; visit_date: s
     const row = await ok(db().from("assessments").insert({
       centre_id: c!.id, ac_id: me.id, visit_date: input.visit_date, checklist_version: snap.version, snapshot: snap, responses, general_remarks: clean(input.general_remarks, 3000), ...gps,
     }).select("id, submitted_at").single());
-    await audit(me, "ASSESSMENT_SUBMITTED", `#${row.id} ${c!.code} visit=${input.visit_date} location=${gps.gps_status}`);
+    await audit(me, "ASSESSMENT_SUBMITTED", `#${row.id} ${c!.code} visit=${input.visit_date} location=${gps.gps_status}${gps.gps_at ? ` captured=${gps.gps_at}` : ""} | ${await device()}`);
     return { ok: true, data: { id: row.id, submitted_at: row.submitted_at, reference: `IAQA-${String(row.id).padStart(5, "0")}` } };
   });
 }
@@ -420,37 +469,100 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
 
 // ---------- contact directories ----------
 
-/** The entry's current kind/district must be editable by this user; a district in-charge's entries stay in its district. */
-async function dirScope(me: Me, id: number | null, kind: DirKind) {
-  check(Object.hasOwn(DIRECTORY, kind), "Choose a list.");
-  const old = id ? await ok(db().from("directory").select("kind, district").eq("id", id).maybeSingle()) as { kind: DirKind; district: string | null } | null : null;
-  const allowed = (k: DirKind, d: string | null) => canEditDir(me, k) && (!me.district || d?.toLowerCase() === me.district.toLowerCase());
-  if ((id && (!old || !allowed(old.kind, old.district))) || !canEditDir(me, kind)) {
-    await audit(me, "ACCESS_DENIED", `directory ${kind} #${id ?? "new"}`);
-    throw new Forbidden("You cannot edit this list.");
-  }
-}
-
+/** IAQA edits the live list directly. An Area Coordinator's addition or edit waits as Pending until IAQA verifies it.
+ *  PROs cannot use the Directory at all; other roles only read it. */
 export async function saveDirEntry(id: number | null, input: { kind: DirKind; name: string; phone: string; email: string; district: string; notes: string }) {
   return run(async () => {
-    const me = await guard("iaqc", "dept");
-    await dirScope(me, id, input.kind);
-    const row = { kind: input.kind, name: clean(input.name, 100), phone: clean(input.phone, 40), email: clean(input.email, 120), notes: clean(input.notes, 1000),
-      district: me.district ?? (input.district.trim() ? await validDistrict(clean(input.district, 80)) : null), updated_at: new Date().toISOString() };
+    const me = await guard("iaqc", "ac");
+    check(Object.hasOwn(DIRECTORY, input.kind), "Choose a list.");
+    const old = id ? await ok(db().from("directory").select("district").eq("id", id).maybeSingle()) as { district: string | null } | null : null;
+    check(!id || old, "This entry no longer exists.");
+    const d = clean(input.district, 80);
+    let district: string | null;
+    if (me.role === "ac") {
+      const mine = await acDistricts(me.id);
+      // An AC proposes entries for their own centres' districts; an edit may keep the entry's existing district.
+      district = mine.find(x => x.toLowerCase() === d.toLowerCase()) ?? (old && (old.district ?? "") === d ? old.district : null);
+      check(district || (old && !old.district && !d), "Choose one of your ASOs.");
+    } else district = d ? await validDistrict(d) : null;
+    const row = { kind: input.kind, name: clean(input.name, 100), phone: clean(input.phone, 40), email: clean(input.email, 120), notes: clean(input.notes, 1000), district };
     check(row.name, "Name is required.");
     check(row.phone || row.email, "Enter a phone number or an email address.");
     check(!row.email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email), "Email address is invalid.");
-    if (id) await ok(db().from("directory").update(row).eq("id", id));
-    else await ok(db().from("directory").insert(row));
-    await audit(me, id ? "DIRECTORY_UPDATED" : "DIRECTORY_CREATED", `${DIRECTORY[row.kind].label}: ${row.name} (${row.district ?? "all districts"})`);
+    const what = `${DIRECTORY[row.kind].label}: ${row.name} (${row.district ?? "all districts"})`;
+    if (me.role === "ac") {
+      const c = await ok(db().from("directory_changes").insert({ ...row, entry_id: id, submitted_by: me.id }).select("id").single());
+      return void await audit(me, id ? "DIRECTORY_EDIT_SUBMITTED" : "DIRECTORY_ADD_SUBMITTED", `#${c.id} ${what}${id ? ` (entry #${id})` : ""}`);
+    }
+    const live = { ...row, updated_at: new Date().toISOString() };
+    if (id) await ok(db().from("directory").update(live).eq("id", id));
+    else await ok(db().from("directory").insert(live));
+    await audit(me, id ? "DIRECTORY_UPDATED" : "DIRECTORY_CREATED", what);
+  });
+}
+
+/** IAQA verifies a pending submission (it goes live) or rejects it with a remark (the live list is unchanged). */
+export async function reviewDirChange(id: number, verify: boolean, remark: string) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const note = clean(remark, 1000);
+    check(verify || note, "Give a remark explaining the rejection.");
+    const [c] = await ok(db().from("directory_changes").update({ status: verify ? "Verified" : "Rejected", reviewed_by: me.id, reviewed_at: new Date().toISOString(), remark: note })
+      .eq("id", id).eq("status", "Pending").select("*")) as DirChange[];
+    check(c, "This submission has already been reviewed.");
+    const what = `#${id} ${DIRECTORY[c.kind].label}: ${c.name}`;
+    if (!verify) return void await audit(me, "DIRECTORY_REJECTED", `${what} — ${note}`);
+    const live = { kind: c.kind, name: c.name, phone: c.phone, email: c.email, district: c.district, notes: c.notes, updated_at: new Date().toISOString() };
+    if (c.entry_id) await ok(db().from("directory").update(live).eq("id", c.entry_id));
+    else await ok(db().from("directory").insert(live));
+    await audit(me, "DIRECTORY_VERIFIED", what);
   });
 }
 
 export async function deleteDirEntry(id: number, kind: DirKind) {
   return run(async () => {
-    const me = await guard("iaqc", "dept");
-    await dirScope(me, id, kind);
+    const me = await guard("iaqc");
+    check(Object.hasOwn(DIRECTORY, kind), "Choose a list.");
+    // Pending edits of a removed entry can no longer be applied.
+    await ok(db().from("directory_changes").update({ status: "Rejected", reviewed_by: me.id, reviewed_at: new Date().toISOString(), remark: "The entry was removed from the Directory." })
+      .eq("entry_id", id).eq("status", "Pending"));
     const [e] = await ok(db().from("directory").delete().eq("id", id).select("name"));
     await audit(me, "DIRECTORY_DELETED", `${DIRECTORY[kind].label}: ${e?.name ?? `#${id}`}`);
+  });
+}
+
+// ---------- information sharing ----------
+
+/** PRO → Area Coordinator or Area Coordinator → PRO. Once sent, an item is never edited. */
+export async function sendShare(input: { recipient_id: string; subject: string; remarks: string }) {
+  return run(async () => {
+    const me = await guard("ac", "dept");
+    check(me.role === "ac" || isPro(me), "Only PROs and Area Coordinators can share information.");
+    const subject = clean(input.subject, 150), remarks = clean(input.remarks, 4000);
+    check(subject, "Subject is required.");
+    check(remarks, "Remarks are required.");
+    const { data: to } = await db().from("profiles").select("id, username, role, department, active").eq("id", input.recipient_id).maybeSingle();
+    check(to?.active && (me.role === "ac" ? isPro(to) : to.role === "ac"), me.role === "ac" ? "Choose an active PRO." : "Choose an active Area Coordinator.");
+    const row = await ok(db().from("info_shares").insert({ sender_id: me.id, recipient_id: to.id, subject, remarks }).select("id").single());
+    await audit(me, "INFO_SHARED", `#${row.id} to ${to.username}: ${subject}`);
+  });
+}
+
+export async function acceptShare(id: number, reply: string) {
+  return run(async () => {
+    const me = await guard("ac", "dept");
+    const upd = await ok(db().from("info_shares").update({ accepted_at: new Date().toISOString(), reply: clean(reply, 2000) })
+      .eq("id", id).eq("recipient_id", me.id).is("accepted_at", null).select("id"));
+    check(upd.length, "This item is not waiting for your acceptance.");
+    await audit(me, "INFO_ACCEPTED", `#${id}`);
+  });
+}
+
+export async function deleteShare(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const [r] = await ok(db().from("info_shares").delete().eq("id", id).select("subject"));
+    check(r, "Item not found.");
+    await audit(me, "INFO_DELETED", `#${id} ${r.subject}`);
   });
 }

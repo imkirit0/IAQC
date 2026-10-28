@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getMe } from "@/lib/auth";
-import { supportInbox } from "@/lib/data";
+import { sharingInbox, supportInbox } from "@/lib/data";
 import { Masthead } from "@/components/Masthead";
 import Loading from "./loading";
 
@@ -17,10 +17,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 async function Shell({ children }: { children: React.ReactNode }) {
   const me = await getMe();
   if (!me) redirect("/login");
+  const [inbox, shares] = await Promise.all([supportInbox(me), sharingInbox(me)]);
   return (
     <div className="app">
       <a className="skip" href="#main">Skip to content</a>
-      <Masthead me={me} inbox={await supportInbox(me)} />
+      <Masthead me={me} inbox={inbox} shares={shares} />
       <main className="main" id="main" tabIndex={-1}><div className="content"><Suspense fallback={<Loading />}>{children}</Suspense></div></main>
     </div>
   );

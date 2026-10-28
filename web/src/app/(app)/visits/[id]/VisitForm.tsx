@@ -53,6 +53,8 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
     const r = await submitAssessment({ centre_id: centre.id, visit_date: d.date, responses: d.responses, general_remarks: d.general, checklist_version: d.version, gps, gps_reason: withoutLocation ? reason : undefined });
     setBusy(false);
     if (r.error) {
+      // Answers stay in the draft; a rejected location only needs recapturing.
+      if (/captured location/i.test(r.error)) return setLocErr(r.error.replace(/ Capture it again\.$/, ""));
       toast(r.error, true);
       if (/checklist was updated/i.test(r.error)) router.refresh();
       return;
@@ -173,7 +175,7 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
           ))}
           <label className="f mt"><span>General remarks (optional)</span><textarea value={d.general} onChange={e => setD({ ...d!, general: e.target.value })} /></label>
           {locErr ? (
-            <div className="banner warn"><Icon name="alert" /><div><b>Your location was not captured.</b> {locErr}
+            <div className="banner warn"><Icon name="alert" /><div><b>Your location was not captured.</b> {locErr} Your answers are kept.
               {!gpsRequired && <label className="f" style={{ margin: "12px 0 0" }}><span>Or submit without location. The report will be marked location unverified. Reason</span>
                 <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g. no GPS signal inside the building" /></label>}
             </div></div>
@@ -181,7 +183,7 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
           <div className="row">
             <span className="small faint">Once submitted, this report is final and cannot be edited.</span><span className="spacer" />
             {locErr && !gpsRequired && <button className="btn" disabled={!!missing.length || busy || !reason.trim()} onClick={() => submit(true)}>Submit without location</button>}
-            <button className={`btn primary${busy ? " loading" : ""}`} disabled={!!missing.length || busy} onClick={() => submit()}>{locErr ? "Try location again and submit" : "Submit visit report"}</button>
+            <button className={`btn primary${busy ? " loading" : ""}`} disabled={!!missing.length || busy} onClick={() => submit()}>{locErr ? "Recapture location and submit" : "Submit visit report"}</button>
           </div>
         </div>
       </div>

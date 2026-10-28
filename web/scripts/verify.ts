@@ -23,7 +23,7 @@ const EXPECTED: Record<string, { scores: number[]; cat: string; alerts: number }
 };
 
 async function main() {
-  for (const t of ["profiles", "centres", "assessments", "audit_log", "settings", "support_requests", "support_events"]) {
+  for (const t of ["profiles", "centres", "assessments", "audit_log", "settings", "support_requests", "support_events", "directory", "directory_changes", "info_shares"]) {
     const { data } = await anon.from(t).select("*").limit(1);
     assert(!data?.length, `RLS leak: public key can read ${t}`);
   }
