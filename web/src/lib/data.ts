@@ -325,10 +325,21 @@ export async function getShares(): Promise<Share[]> {
     from: by.get(r.sender_id)?.name ?? "—", from_role: roleName(by.get(r.sender_id)), to: by.get(r.recipient_id)?.name ?? "—", to_role: roleName(by.get(r.recipient_id)) }));
 }
 
-/** Who this user may send to: PROs to Area Coordinators and back. Empty for everyone else (read-only). */
+/** (acId, proId) => whether they share a district: one of the AC's active centres is in the PRO's district. A PRO without a district (head office) covers all. */
+export async function sameRegion() {
+  const [cs, au] = await Promise.all([db().from("centres").select("district, ac_id").eq("active", true),
+    db().auth.admin.listUsers({ perPage: 1000 })]); // ponytail: single page of auth users, as in getUsers
+  const acs = new Map<string, Set<string>>();
+  (must(cs) as { district: string; ac_id: string | null }[]).forEach(c => { if (c.ac_id) acs.set(c.ac_id, (acs.get(c.ac_id) ?? new Set()).add(c.district.toLowerCase())); });
+  const district = new Map(au.data.users.map(u => [u.id, ((u.app_metadata?.district as string) || "").toLowerCase()]));
+  return (acId: string, proId: string) => { const d = district.get(proId); return !d || !!acs.get(acId)?.has(d); };
+}
+
+/** Who this user may send to: PROs to Area Coordinators of their district and back. Empty for everyone else (read-only). */
 export async function shareRecipients(me: Me) {
   if (me.role !== "ac" && !isPro(me)) return [];
-  return (await people()).filter(p => p.active && p.id !== me.id && (me.role === "ac" ? p.pro : p.role === "ac")).map(p => ({ id: p.id, name: p.name }));
+  const [ps, same] = await Promise.all([people(), sameRegion()]);
+  return ps.filter(p => p.active && p.id !== me.id && (me.role === "ac" ? p.pro && same(me.id, p.id) : p.role === "ac" && same(p.id, me.id))).map(p => ({ id: p.id, name: p.name }));
 }
 
 /** Items waiting for this user's acceptance: the count on the Information sharing tab. */

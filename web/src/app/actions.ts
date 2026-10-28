@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { acDistricts, actorsOn, getSettings, makeSnapshot, type DirChange, type SupportRow } from "@/lib/data";
+import { acDistricts, actorsOn, getSettings, makeSnapshot, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
 import { ACTIONS, CATEGORIES, can, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
@@ -543,6 +543,7 @@ export async function sendShare(input: { recipient_id: string; subject: string; 
     check(remarks, "Remarks are required.");
     const { data: to } = await db().from("profiles").select("id, username, role, department, active").eq("id", input.recipient_id).maybeSingle();
     check(to?.active && (me.role === "ac" ? isPro(to) : to.role === "ac"), me.role === "ac" ? "Choose an active PRO." : "Choose an active Area Coordinator.");
+    check((await sameRegion())(me.role === "ac" ? me.id : to.id, me.role === "ac" ? to.id : me.id), "You can share only with someone in your own district.");
     const row = await ok(db().from("info_shares").insert({ sender_id: me.id, recipient_id: to.id, subject, remarks }).select("id").single());
     await audit(me, "INFO_SHARED", `#${row.id} to ${to.username}: ${subject}`);
   });
