@@ -6,11 +6,11 @@ import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind } fr
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
-  departments: string[]; support_verification: boolean; gps_required: boolean; gps_flag_m: number };
+  departments: string[]; asos: string[]; support_verification: boolean; gps_required: boolean; gps_flag_m: number };
 export const DEFAULT_SETTINGS: Settings = {
   thresholds: { green: 85, yellow: 70 }, factors: { C: 100, P: 50, N: 0 },
   priority_weights: { Critical: 10, High: 6, Medium: 3, Low: 1 }, visit_cycle_days: 60, checklist_version: 1,
-  departments: DEFAULT_DEPARTMENTS, support_verification: true, gps_required: false, gps_flag_m: 500,
+  departments: DEFAULT_DEPARTMENTS, asos: [], support_verification: true, gps_required: false, gps_flag_m: 500,
 };
 
 export type Centre = { id: number; code: string; name: string; location: string; district: string; ac_id: string | null; active: boolean; demo: boolean; lat: number | null; lng: number | null; ac_name?: string | null; last_visit?: string | null };
@@ -40,6 +40,13 @@ function must<T>(r: { data: T | null; error: { message: string } | null }): T {
 export async function getSettings(): Promise<Settings> {
   const rows = must(await db().from("settings").select("key, value")) as { key: keyof Settings; value: never }[];
   return { ...DEFAULT_SETTINGS, ...Object.fromEntries(rows.map(r => [r.key, r.value])) };
+}
+
+/** Area Support Offices: those IAQA added (possibly with no centres yet) plus every district already used by a centre. */
+export async function getAsos(): Promise<string[]> {
+  const [st, cs] = await Promise.all([getSettings(), db().from("centres").select("district")]);
+  const all = [...st.asos, ...(must(cs) as { district: string }[]).map(c => c.district)];
+  return [...new Map(all.map(a => [a.toLowerCase(), a])).values()].sort();
 }
 
 export async function getChecklist(includeInactive = false): Promise<Section[]> {
@@ -294,9 +301,9 @@ export async function acDistricts(acId: string) {
  *  IAQA also gets submissions to verify, an Area Coordinator their own submissions. */
 export async function getDirectory(me: Me) {
   const changes = me.role === "iaqc" || me.role === "ac"
-    ? (me.role === "ac" ? db().from("directory_changes").select("*").eq("submitted_by", me.id) : db().from("directory_changes").select("*")).order("id", { ascending: false }).limit(300)
+    ? (me.role === "ac" ? db().from("directory_changes").select("*").eq("submitted_by", me.id) : db().from("directory_changes").select("*")).neq("kind", "pro").order("id", { ascending: false }).limit(300)
     : null; // ponytail: latest 300 submissions; page them if IAQA needs the older history on screen (audit log keeps it all)
-  const [rs, cs, ch, names] = await Promise.all([db().from("directory").select("*").order("name"), db().from("centres").select("district, ac_id").eq("active", true), changes, profileNames()]);
+  const [rs, cs, ch, names] = await Promise.all([db().from("directory").select("*").neq("kind", "pro").order("name"), db().from("centres").select("district, ac_id").eq("active", true), changes, profileNames()]);
   const centres = must(cs) as { district: string; ac_id: string | null }[];
   const own = me.role === "ac" ? [...new Set(centres.filter(c => c.ac_id === me.id).map(c => c.district))].sort() : null;
   const mine = own ? new Set(own.map(d => d.toLowerCase())) : me.district ? new Set([me.district.toLowerCase()]) : null;

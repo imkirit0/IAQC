@@ -61,7 +61,7 @@ centres — from **My support requests**, from a centre card, or straight after 
 
 ## Directory and information sharing
 
-- **Directory** (PROs, trainers, placement officers): Area Coordinators add and edit entries, but each change waits as *Pending* until the IAQA
+- **Directory** (trainers, placement officers; the old PRO list is hidden, its rows kept): Area Coordinators add and edit entries, but each change waits as *Pending* until the IAQA
   Coordinator verifies it (or rejects it with a remark the coordinator sees and can correct). Until then the verified version stays listed.
   IAQA edits directly. Other roles read verified entries only. District PROs (in-charges of the PRO department) have no Directory access.
 - **Information sharing**: a PRO sends an item (subject, remarks) to an Area Coordinator or the other way round; the recipient accepts it, optionally
@@ -72,7 +72,7 @@ centres — from **My support requests**, from a centre card, or straight after 
 
 Delete deactivates by default: the user loses access on their next request, and their records keep their name. Restore reactivates.
 Permanent deletion is allowed only when nothing refers to the account (or, for a centre, when it has no visit reports or support requests).
-IAQA and CMD system accounts cannot be deleted. ASO Directors are added from the Centres tab, with a unique mobile number and email.
+IAQA and CMD system accounts cannot be deleted. ASOs are added under Centres (every centre picks one); ASO Directors under Users, with a unique mobile number and email.
 
 ## Visit location
 

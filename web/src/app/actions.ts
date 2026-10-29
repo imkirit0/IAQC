@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { acDistricts, actorsOn, getSettings, makeSnapshot, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
+import { acDistricts, actorsOn, getAsos, getSettings, makeSnapshot, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
 import { ACTIONS, CATEGORIES, can, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
@@ -130,7 +130,8 @@ export async function saveCentre(id: number | null, input: { code: string; name:
     const me = await guard("iaqc");
     const row = { code: clean(input.code, 30).toUpperCase(), name: clean(input.name, 150), location: clean(input.location, 150), district: clean(input.district, 80), ac_id: input.ac_id || null, active: input.active,
       lat: input.lat ?? null, lng: input.lng ?? null };
-    check(row.code && row.name && row.location && row.district, "Code, name, location and district are required.");
+    check(row.code && row.name && row.location && row.district, "Code, name, location and ASO are required.");
+    row.district = await validDistrict(row.district);
     check((row.lat == null) === (row.lng == null), "Enter both latitude and longitude, or neither.");
     check(row.lat == null || (Math.abs(row.lat) <= 90 && Math.abs(row.lng!) <= 180), "Latitude must be within ±90 and longitude within ±180.");
     if (row.ac_id) {
@@ -155,9 +156,20 @@ async function asoDistrict(id: string): Promise<string | null> {
   return (data.user?.app_metadata?.district as string) || null;
 }
 async function validDistrict(d: string) {
-  const { data } = await db().from("centres").select("district").ilike("district", d).limit(1);
-  check(data?.length, "Choose an ASO district that has centres.");
-  return data![0].district as string;
+  const aso = (await getAsos()).find(a => a.toLowerCase() === d.trim().toLowerCase());
+  check(aso, "Choose an ASO from the list.");
+  return aso;
+}
+
+export async function addAso(name: string) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const aso = clean(name, 80);
+    check(aso, "Enter the ASO name.");
+    check(!(await getAsos()).some(a => a.toLowerCase() === aso.toLowerCase()), "That ASO already exists.");
+    await ok(db().from("settings").upsert({ key: "asos", value: [...(await getSettings()).asos, aso] }));
+    await audit(me, "ASO_CREATED", aso);
+  });
 }
 
 async function validDepartment(d: string) {
@@ -474,7 +486,7 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
 export async function saveDirEntry(id: number | null, input: { kind: DirKind; name: string; phone: string; email: string; district: string; notes: string }) {
   return run(async () => {
     const me = await guard("iaqc", "ac");
-    check(Object.hasOwn(DIRECTORY, input.kind), "Choose a list.");
+    check(Object.hasOwn(DIRECTORY, input.kind) && input.kind !== "pro", "Choose a list."); // the PRO list is retired (rows kept, hidden)
     const old = id ? await ok(db().from("directory").select("district").eq("id", id).maybeSingle()) as { district: string | null } | null : null;
     check(!id || old, "This entry no longer exists.");
     const d = clean(input.district, 80);

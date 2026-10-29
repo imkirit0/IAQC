@@ -10,14 +10,14 @@ import { useToast } from "@/components/Providers";
 import { PageHead } from "@/components/ui";
 import { fmtDT } from "@/lib/format";
 
-const KINDS = Object.keys(DIRECTORY) as DirKind[];
+const KINDS: DirKind[] = ["trainer", "placement"]; // the PRO list is retired: its rows stay in the database, hidden
 const STATUS_BADGE = { Pending: "b-yellow", Verified: "b-green", Rejected: "b-red" } as const;
 type Editing = Partial<DirEntry> & { kind: DirKind; resubmit?: boolean };
 
 /** iaqc edits the live list and verifies submissions; ac proposes additions and edits (pending until verified); read = view only. */
 export function DirectoryManager({ entries, submissions, districts, mode, myDistrict }: { entries: DirEntry[]; submissions: DirChange[]; districts: string[]; mode: "iaqc" | "ac" | "read"; myDistrict: string | null }) {
   const router = useRouter(), toast = useToast();
-  const [kind, setKind] = useState<DirKind>("pro"), [q, setQ] = useState(""), [district, setDistrict] = useState("");
+  const [kind, setKind] = useState<DirKind>("trainer"), [q, setQ] = useState(""), [district, setDistrict] = useState("");
   const [editing, setEditing] = useState<Editing | null>(null), [rejecting, setRejecting] = useState<DirChange | null>(null);
   const canEdit = mode !== "read", s = q.toLowerCase();
   const rows = entries.filter(e => e.kind === kind && (!s || `${e.name} ${e.phone} ${e.email} ${e.notes}`.toLowerCase().includes(s)) && (!district || !e.district || e.district === district));
@@ -39,9 +39,9 @@ export function DirectoryManager({ entries, submissions, districts, mode, myDist
 
   return (
     <>
-      <PageHead title="Directory" sub={mode === "ac" ? "PROs, trainers and placement officers for your centres. Additions and edits you make are listed once the IAQA Coordinator verifies them."
-        : mode === "iaqc" ? "PROs, trainers and placement officers. Area Coordinators' additions and edits wait below for your verification."
-        : "PROs, trainers and placement officers to contact for your centres."}>
+      <PageHead title="Directory" sub={mode === "ac" ? "Trainers and placement officers for your centres. Additions and edits you make are listed once the IAQA Coordinator verifies them."
+        : mode === "iaqc" ? "Trainers and placement officers. Area Coordinators' additions and edits wait below for your verification."
+        : "Trainers and placement officers to contact for your centres."}>
         {canEdit && <button className="btn primary" onClick={() => setEditing({ kind })}><Icon name="plus" />Add to {DIRECTORY[kind].label}</button>}
       </PageHead>
 

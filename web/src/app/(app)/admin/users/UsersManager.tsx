@@ -75,8 +75,8 @@ function AreaPicker({ centres, selected, owner }: { centres: CentreLite[]; selec
 }
 function AsoSelect({ asos, value }: { asos: string[]; value?: string }) {
   return (
-    <label className="f"><span>ASO district (sees only these centres, read-only)</span>
-      <select name="district" required defaultValue={value ?? ""}><option value="" disabled>Choose a district</option>{asos.map(a => <option key={a}>{a}</option>)}</select></label>
+    <label className="f"><span>ASO managed (sees only its centres)</span>
+      <select name="district" required defaultValue={value ?? ""}><option value="" disabled>Choose an ASO</option>{asos.map(a => <option key={a}>{a}</option>)}</select></label>
   );
 }
 function DeptDistrict({ asos, value }: { asos: string[]; value?: string }) {
@@ -94,11 +94,10 @@ function DeptSelect({ departments, value }: { departments: string[]; value?: str
 }
 const pickedIds = (f: HTMLFormElement) => [...f.querySelectorAll<HTMLInputElement>("input[type=hidden][name=centre]")].map(i => Number(i.value));
 
-export function UsersManager({ users, centres, departments }: { users: User[]; centres: CentreLite[]; departments: string[] }) {
+export function UsersManager({ users, centres, departments, asos }: { users: User[]; centres: CentreLite[]; departments: string[]; asos: string[] }) {
   const router = useRouter(), toast = useToast();
   const [editingAso, setEditingAso] = useState<User | null>(null);
-  const [creatingDept, setCreatingDept] = useState(false), [editingDept, setEditingDept] = useState<User | null>(null);
-  const asos = [...new Set(centres.map(c => c.district))].sort();
+  const [creatingAso, setCreatingAso] = useState(false), [creatingDept, setCreatingDept] = useState(false), [editingDept, setEditingDept] = useState<User | null>(null);
   const [creating, setCreating] = useState(false), [editing, setEditing] = useState<User | null>(null), [resetting, setResetting] = useState<User | null>(null);
   const [deleting, setDeleting] = useState<User | null>(null);
   const done = (msg: string) => { toast(msg); router.refresh(); };
@@ -111,7 +110,8 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
 
   return (
     <>
-      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors (added under Centres) get read-only access to one district. Department in-charges (e.g. a district's PRO) see only support requests assigned to their department from centres in their district. IAQA and CMD are fixed system accounts.">
+      <PageHead title="Users" sub="Area Coordinators see only the centres assigned to them. ASO Directors see only the centres of the ASO they manage. Department in-charges (e.g. a district's PRO) see only support requests assigned to their department from centres in their district. IAQA and CMD are fixed system accounts.">
+        <button className="btn" onClick={() => setCreatingAso(true)}><Icon name="plus" />New ASO Director</button>
         <button className="btn" onClick={() => setCreatingDept(true)}><Icon name="plus" />New Department In-Charge</button>
         <button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New Area Coordinator</button>
       </PageHead>
@@ -174,6 +174,22 @@ export function UsersManager({ users, centres, departments }: { users: User[]; c
           </div>
           <label className="check"><input type="checkbox" name="active" defaultChecked={editingAso.active} /> Active account</label>
         </>}
+      </Modal>
+
+      <Modal open={creatingAso} onClose={() => setCreatingAso(false)} title="New ASO Director" submitLabel="Create account" onSubmit={async f => {
+        const v = formData(f);
+        const r = await createUser({ username: v.username, name: v.name, area: "", password: v.password, centre_ids: [], district: v.district, phone: v.phone, email: v.email });
+        if (r.error) return r.error;
+        done("ASO Director created");
+      }}>
+        <div className="grid2">
+          <label className="f"><span>Full name</span><input name="name" required /></label>
+          <label className="f"><span>Username</span><input name="username" required pattern="[A-Za-z0-9._]+" placeholder="e.g. aso.mlp" autoCapitalize="none" /></label>
+          <label className="f"><span>Mobile number</span><input name="phone" type="tel" required placeholder="e.g. 9847000000" /></label>
+          <label className="f"><span>Email</span><input name="email" type="email" required /></label>
+        </div>
+        <AsoSelect asos={asos} />
+        <label className="f"><span>Temporary password (share it securely)</span><input name="password" required minLength={8} defaultValue={creatingAso ? tempPassword() : ""} /></label>
       </Modal>
 
       <Modal open={creatingDept} onClose={() => setCreatingDept(false)} title="New Department In-Charge" submitLabel="Create account" onSubmit={async f => {
