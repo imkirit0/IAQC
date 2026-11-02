@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Criterion, Section } from "@/lib/data";
 import { PRIORITIES, type Priority } from "@/lib/scoring";
-import { saveCriterion, saveSection } from "@/app/actions";
+import { deleteCriterion, deleteSection, saveCriterion, saveSection } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 import { Modal, formData } from "@/components/Modal";
 import { useToast } from "@/components/Providers";
@@ -17,6 +17,11 @@ export function ChecklistManager({ sections, version, weights }: { sections: Sec
   const maxOf = (s: Section) => s.criteria.filter(c => c.active).reduce((a, c) => a + c.weight, 0);
   const total = live.reduce((a, s) => a + maxOf(s), 0);
   const done = (msg: string) => { toast(msg); router.refresh(); };
+  const remove = async (question: string, del: () => Promise<{ error?: string }>, msg: string) => {
+    if (!window.confirm(question)) return;
+    const r = await del();
+    if (r.error) toast(r.error, true); else done(msg);
+  };
   const openCrit = (c: Partial<Criterion>) => { setCrit(c); setWeight(c.weight ?? weights[c.priority ?? "Medium"]); };
   const critInput = (c: Criterion, active: boolean) => ({ section_id: c.section_id, text: c.text, description: c.description, priority: c.priority, weight: c.weight, critical: c.critical, mandatory: c.mandatory, active, sort: c.sort });
 
@@ -40,6 +45,7 @@ export function ChecklistManager({ sections, version, weights }: { sections: Sec
           <div className="hd"><h2>{s.name}</h2>{!s.active && <span className="chip">Inactive section</span>}
             <span className="small faint">{maxOf(s)} points · {s.criteria.filter(c => c.active).length} active criteria</span><span className="spacer" />
             <button className="btn sm quiet" onClick={() => setSec(s)}>Edit section</button>
+            <button className="btn sm quiet" onClick={() => remove(`Delete the section "${s.name}" and its ${s.criteria.length} criteria? This cannot be undone. Submitted reports are not affected.`, () => deleteSection(s.id), "Section deleted")}>Delete section</button>
             <button className="btn sm" onClick={() => openCrit({ section_id: s.id, priority: "Medium", active: true, sort: 99 })}><Icon name="plus" />Criterion</button></div>
           <div className="tw"><table>
             <thead><tr><th>#</th><th>Criterion</th><th>Priority</th><th className="right">Weight</th><th>Flags</th><th>Status</th><th /></tr></thead>
@@ -52,7 +58,8 @@ export function ChecklistManager({ sections, version, weights }: { sections: Sec
                 <td data-l="Status">{c.active ? "Active" : <span className="faint">Inactive</span>}</td>
                 <td data-l="" className="nowrap right">
                   <button className="btn sm quiet" onClick={async () => { const r = await saveCriterion(c.id, critInput(c, !c.active)); if (r.error) toast(r.error, true); else done(c.active ? "Criterion deactivated" : "Criterion activated"); }}>{c.active ? "Deactivate" : "Activate"}</button>{" "}
-                  <button className="btn sm" onClick={() => openCrit(c)}>Edit</button>
+                  <button className="btn sm" onClick={() => openCrit(c)}>Edit</button>{" "}
+                  <button className="btn sm quiet" onClick={() => remove(`Delete the criterion "${c.text}"? This cannot be undone. Submitted reports are not affected.`, () => deleteCriterion(c.id), "Criterion deleted")}>Delete</button>
                 </td>
               </tr>
             )) : <tr><td data-l="" colSpan={7} className="empty">No criteria in this section yet.</td></tr>}</tbody>

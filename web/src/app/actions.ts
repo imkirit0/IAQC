@@ -123,6 +123,33 @@ export async function saveCriterion(id: number | null, input: { section_id: numb
   });
 }
 
+/** Permanent deletion of a section and its criteria. Submitted reports keep their own snapshot, so they are unaffected.
+ *  Migration 0004 reads the audit detail, which must start with the section name, so it does not restore a deleted section. */
+export async function deleteSection(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const { data: s } = await db().from("sections").select("name").eq("id", id).maybeSingle();
+    check(s, "Section not found.");
+    // ponytail: two statements, not atomic; on delete cascade on criteria.section_id if a partial delete ever matters
+    const gone = await ok(db().from("criteria").delete().eq("section_id", id).select("id"));
+    await ok(db().from("sections").delete().eq("id", id));
+    await bumpVersion();
+    await audit(me, "SECTION_DELETED", `${s.name} (${gone.length} criteria)`);
+  });
+}
+
+/** Permanent deletion of a criterion. Submitted reports keep their own snapshot, so they are unaffected. */
+export async function deleteCriterion(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const { data: c } = await db().from("criteria").select("text").eq("id", id).maybeSingle();
+    check(c, "Criterion not found.");
+    await ok(db().from("criteria").delete().eq("id", id));
+    await bumpVersion();
+    await audit(me, "CRITERION_DELETED", c.text);
+  });
+}
+
 // ---------- centres & users ----------
 
 export async function saveCentre(id: number | null, input: { code: string; name: string; location: string; district: string; ac_id: string | null; active: boolean; lat: number | null; lng: number | null }) {

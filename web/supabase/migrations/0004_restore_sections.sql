@@ -1,6 +1,6 @@
 -- Restores the four checklist sections dropped when the G-TEC Operations/Academics criteria were introduced.
--- Adds a section only if no section of that name exists (so a later deactivation by IAQA is respected), and bumps
--- the checklist version once when anything was added. Submitted reports keep their own snapshot.
+-- Adds a section only if no section of that name exists (so a later deactivation by IAQA is respected) and IAQA has
+-- not deleted one of that name, and bumps the checklist version once when anything was added. Submitted reports keep their own snapshot.
 do $$
 declare
   w jsonb := coalesce((select value from public.settings where key = 'priority_weights'), '{"Critical":10,"High":6,"Medium":3,"Low":1}');
@@ -35,7 +35,8 @@ begin
       ["Student concerns about fees, academics, or services are documented.", "Low", false, false]]'::jsonb)
   ) as t(n, name, crits)
   loop
-    continue when exists (select 1 from public.sections where lower(name) = lower(sec.name));
+    continue when exists (select 1 from public.sections where lower(name) = lower(sec.name))
+      or exists (select 1 from public.audit_log where action = 'SECTION_DELETED' and lower(detail) like lower(sec.name) || ' (%');
     insert into public.sections (name, sort) values (sec.name, base + sec.n) returning id into sid;
     insert into public.criteria (section_id, text, priority, weight, critical, mandatory, sort)
       select sid, c->>0, c->>1, (w->>(c->>1))::double precision, (c->>2)::boolean, (c->>3)::boolean, i

@@ -74,6 +74,11 @@ Delete deactivates by default: the user loses access on their next request, and 
 Permanent deletion is allowed only when nothing refers to the account (or, for a centre, when it has no visit reports or support requests).
 IAQA and CMD system accounts cannot be deleted. ASOs are added under Centres (every centre picks one); ASO Directors under Users, with a unique mobile number and email.
 
+## Deleting checklist sections and criteria
+
+IAQA can permanently delete a section (with its criteria) or a single criterion after confirming. Deactivating remains the reversible option.
+Submitted reports keep their own snapshot and are unaffected; a draft in progress moves to the new checklist version on reload.
+
 ## Visit location
 
 Submitting a visit report captures one GPS fix from the device (latitude, longitude, accuracy, fix time). The server accepts it only if it is
