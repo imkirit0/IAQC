@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
 import { acDistricts, actorsOn, getAsos, getSettings, makeSnapshot, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
-import { ACTIONS, CATEGORIES, can, CHECK_OUTCOMES, cleanSpecs, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind, type Spec } from "@/lib/support";
+import { ACTIONS, CATEGORIES, can, CHECK_OUTCOMES, cleanSpecs, DIRECTORY, nextStatus, refFileError, SR_PRIORITIES, srRef, type ActionName, type DirKind, type Spec } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
 export type Result = { ok?: true; error?: string; data?: Record<string, unknown> };
@@ -638,6 +638,98 @@ export async function recordCheck(assessmentId: number, input: { subject: "infra
     await ok(db().from("directory_checks").insert({ assessment_id: a.id, subject: input.subject === "infrastructure" ? "infrastructure" : "trainer", subject_id: input.subject_id, label: item.name, outcome, note, user_id: me.id }));
     await audit(me, "DIRECTORY_CHECK", `assessment #${a.id} ${input.subject}: ${item.name} → ${outcome}`);
   });
+}
+
+// ---------- reference data ----------
+
+const REF_BUCKET = "reference";
+
+/** Categories are whatever the IAQA Coordinator names them; none are built in. */
+export async function saveRefCategory(id: number | null, name: string) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const n = clean(name, 80);
+    check(n, "Enter the category name.");
+    const { data: dup } = await db().from("reference_categories").select("id").ilike("name", n.replace(/[\\%_]/g, "\\$&")).neq("id", id ?? 0).limit(1);
+    check(!dup?.length, "That category already exists.");
+    if (id) await ok(db().from("reference_categories").update({ name: n }).eq("id", id));
+    else await ok(db().from("reference_categories").insert({ name: n }));
+    await audit(me, id ? "REFERENCE_CATEGORY_RENAMED" : "REFERENCE_CATEGORY_CREATED", n);
+  });
+}
+
+/** Only an empty category can be deleted, so no reference data is lost by it. */
+export async function deleteRefCategory(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const { count } = await db().from("reference_items").select("id", { count: "exact", head: true }).eq("category_id", id);
+    check(!count, "Move or delete this category's reference data first.");
+    const [c] = await ok(db().from("reference_categories").delete().eq("id", id).select("name"));
+    check(c, "Category not found.");
+    await audit(me, "REFERENCE_CATEGORY_DELETED", c.name);
+  });
+}
+
+/** Adds an item or updates one. Each save is a new version: earlier versions and their files stay as the item's history.
+ *  Form fields: id (blank = new), category_id, title, content, file (optional; an update without one keeps the current file), remove_file. */
+export async function saveRefItem(form: FormData) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const id = Number(form.get("id")) || null, category_id = Number(form.get("category_id"));
+    const title = clean(form.get("title"), 150), content = clean(form.get("content"), 20000);
+    const f = form.get("file"), file = f instanceof File && f.size > 0 ? f : null;
+    check(title, "Title is required.");
+    const { data: cat } = await db().from("reference_categories").select("id, name").eq("id", category_id).maybeSingle();
+    check(cat, "Choose a category.");
+    const fileErr = file ? refFileError(file.name, file.size) : null;
+    check(!fileErr, fileErr ?? "");
+    const [prev] = id ? await ok(db().from("reference_versions").select("file_path, file_name").eq("item_id", id).order("id", { ascending: false }).limit(1)) as { file_path: string | null; file_name: string | null }[] : [];
+    check(!id || prev, "This item no longer exists.");
+    const keep = prev && !form.get("remove_file") ? prev : { file_path: null, file_name: null };
+    check(content || file || keep.file_path, "Enter the details or attach a file.");
+
+    const itemId = id ?? (await ok(db().from("reference_items").insert({ category_id }).select("id").single())).id as number;
+    if (id) await ok(db().from("reference_items").update({ category_id }).eq("id", id));
+    let attached = keep;
+    if (file) {
+      const path = `${itemId}/${crypto.randomUUID()}.${file.name.split(".").pop()!.toLowerCase()}`;
+      const up = await db().storage.from(REF_BUCKET).upload(path, file, { contentType: file.type || "application/octet-stream" });
+      if (up.error) {
+        if (!id) await db().from("reference_items").delete().eq("id", itemId); // do not leave an item with no version behind
+        throw new Error(up.error.message);
+      }
+      attached = { file_path: path, file_name: clean(file.name, 200) };
+    }
+    await ok(db().from("reference_versions").insert({ item_id: itemId, title, content, ...attached, updated_by: me.id }));
+    await audit(me, id ? "REFERENCE_UPDATED" : "REFERENCE_CREATED", `${cat.name}: ${title}${file ? ` (file ${attached.file_name})` : ""}`);
+  });
+}
+
+/** Removes an item with its update history and files. The audit log keeps the record that it existed. */
+export async function deleteRefItem(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const vs = await ok(db().from("reference_versions").select("title, file_path").eq("item_id", id).order("id", { ascending: false })) as { title: string; file_path: string | null }[];
+    check(vs.length, "This item no longer exists.");
+    await ok(db().from("reference_items").delete().eq("id", id));
+    const paths = [...new Set(vs.flatMap(v => v.file_path ?? []))];
+    if (paths.length) await db().storage.from(REF_BUCKET).remove(paths);
+    await audit(me, "REFERENCE_DELETED", `${vs[0].title} (${vs.length} versions)`);
+  });
+}
+
+/** A one-minute download link for the file of one version (current or historical). Any signed-in user may read reference data. */
+export async function refFileUrl(versionId: number): Promise<Result> {
+  try {
+    await guard("ac", "iaqc", "cmd", "dept");
+    const { data: v } = await db().from("reference_versions").select("file_path, file_name").eq("id", versionId).maybeSingle();
+    if (!v?.file_path) return { error: "This file is no longer available." };
+    const { data, error } = await db().storage.from(REF_BUCKET).createSignedUrl(v.file_path, 60, { download: v.file_name ?? true });
+    if (error || !data) return { error: "The file could not be opened. Please try again." };
+    return { ok: true, data: { url: data.signedUrl } };
+  } catch (e) {
+    return { error: e instanceof Forbidden ? e.message : "The file could not be opened. Please try again." };
+  }
 }
 
 // ---------- information sharing ----------

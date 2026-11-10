@@ -50,3 +50,12 @@ assert.deepEqual(cleanSpecs([{ label: " RAM ", value: " 8 GB " }, { label: "", v
 assert.deepEqual(cleanSpecs("not a list"), []);
 assert.equal(cleanSpecs(Array.from({ length: 80 }, (_, i) => ({ label: `s${i}`, value: "" }))).length, 50);
 console.log("Infrastructure specification checks passed.");
+
+// Reference Data uploads: type and size are checked before anything is stored.
+import { refFileError, REF_MAX_BYTES } from "../src/lib/support";
+assert.equal(refFileError("Admissions Q3.XLSX", 1000), null);
+assert.match(refFileError("run.exe", 1000)!, /not accepted/);
+assert.match(refFileError("noextension", 1000)!, /not accepted/);
+assert.match(refFileError("big.pdf", REF_MAX_BYTES + 1)!, /4 MB/);
+assert.match(refFileError("empty.pdf", 0)!, /empty/);
+console.log("Reference Data upload checks passed.");

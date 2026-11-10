@@ -19,6 +19,18 @@ export function cleanSpecs(rows: unknown): Spec[] {
     .filter(s => s.label || s.value).slice(0, 50);
 }
 export const CHECK_OUTCOMES = ["Verified", "Discrepancy"] as const;
+
+// ponytail: Reference Data files pass through a Server Action, so 4 MB is the ceiling (hosting caps request bodies near 4.5 MB);
+// switch to signed direct-to-storage uploads if larger files are needed.
+export const REF_MAX_BYTES = 4 * 1024 * 1024;
+export const REF_FILE_TYPES = ["pdf", "xlsx", "xls", "csv", "docx", "doc", "pptx", "ppt", "txt", "png", "jpg", "jpeg"];
+/** Why a Reference Data file cannot be uploaded, or null when it can. */
+export function refFileError(name: string, size: number): string | null {
+  const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  if (!REF_FILE_TYPES.includes(ext)) return `That file type is not accepted. Use ${REF_FILE_TYPES.join(", ")}.`;
+  if (size > REF_MAX_BYTES) return "The file is larger than 4 MB.";
+  return size > 0 ? null : "The file is empty.";
+}
 export const CATEGORIES = ["Training", "Academic Support", "PRO Support", "Marketing Support", "Materials Support", "Certification Support", "Operational Support", "Other"];
 export const SR_PRIORITIES = ["Normal", "High", "Urgent"] as const;
 export const SR_STATUSES = ["Submitted", "Under Review", "Awaiting Clarification", "Assigned", "Accepted", "In Progress", "On Hold",

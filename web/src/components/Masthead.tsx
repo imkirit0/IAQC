@@ -13,10 +13,10 @@ import { DIRECTORY } from "@/lib/support";
 type Role = "ac" | "iaqc" | "cmd" | "dept";
 const NAV: Record<Role, [string, string, IconName][]> = {
   iaqc: [["/ranking", "Risk ranking", "dash"], ["/assessments", "Assessments", "list"], ["/support", "Support", "inbox"], ["/admin/centres", "Centres", "centre"], ["/admin/users", "Users", "users"],
-         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"], ["/directory", "Directory", "users"], ["/sharing", "Info sharing", "share"]],
-  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"], ["/directory", "Directory", "users"], ["/sharing", "Info sharing", "share"]],
-  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"], ["/sharing", "Info sharing", "share"], ["/directory", "Directory", "users"]],
-  dept: [["/support", "Assigned requests", "inbox"], ["/sharing", "Info sharing", "share"], ["/directory", "Directory", "users"]],
+         ["/admin/checklist", "Checklist", "check"], ["/admin/scoring", "Settings", "sliders"], ["/admin/audit", "Audit log", "log"], ["/directory", "Directory", "users"], ["/sharing", "Info sharing", "share"], ["/reference", "Reference data", "log"]],
+  cmd: [["/overview", "Overview", "dash"], ["/ranking", "Centre ranking", "rank"], ["/assessments", "History", "list"], ["/support", "Support requests", "inbox"], ["/directory", "Directory", "users"], ["/sharing", "Info sharing", "share"], ["/reference", "Reference data", "log"]],
+  ac: [["/visits", "My centres", "centre"], ["/support", "My support requests", "inbox"], ["/sharing", "Info sharing", "share"], ["/directory", "Directory", "users"], ["/reference", "Reference data", "log"]],
+  dept: [["/support", "Assigned requests", "inbox"], ["/sharing", "Info sharing", "share"], ["/directory", "Directory", "users"], ["/reference", "Reference data", "log"]],
 };
 const ROLE_LABEL: Record<Role, string> = { ac: "Area Coordinator", iaqc: "IAQA Coordinator", cmd: "CMD, Super Admin", dept: "Department In-Charge" };
 

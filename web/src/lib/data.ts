@@ -344,6 +344,26 @@ export async function getChecks(assessmentId: number): Promise<Record<string, Ch
   return Object.fromEntries((must(rs) as (Omit<Check, "by"> & { user_id: string })[]).map(({ user_id, ...c }) => [`${c.subject}:${c.subject_id}`, { ...c, by: names.get(user_id) ?? "—" }]));
 }
 
+// ---------- reference data ----------
+
+export type RefVersion = { id: number; item_id: number; title: string; content: string; file_name: string | null; updated_at: string; by: string };
+/** An item as shown: its latest version, with the earlier ones (newest first) as history. */
+export type RefItem = RefVersion & { category_id: number; history: RefVersion[] };
+export type RefCategory = { id: number; name: string };
+
+/** Everything in the library, for every signed-in user. Most recently updated items first. */
+// ponytail: loads every version of every item; fetch history on demand once the library runs to thousands of updates
+export async function getReference(): Promise<{ categories: RefCategory[]; items: RefItem[] }> {
+  const [cs, is, vs, names] = await Promise.all([db().from("reference_categories").select("id, name").order("name"), db().from("reference_items").select("id, category_id"),
+    db().from("reference_versions").select("id, item_id, title, content, file_name, updated_at, updated_by").order("id", { ascending: false }), profileNames()]);
+  const versions = (must(vs) as (Omit<RefVersion, "by"> & { updated_by: string })[]).map(({ updated_by, ...v }) => ({ ...v, by: names.get(updated_by) ?? "—" }));
+  const items = (must(is) as { id: number; category_id: number }[]).flatMap(i => {
+    const [latest, ...history] = versions.filter(v => v.item_id === i.id);
+    return latest ? [{ ...latest, category_id: i.category_id, history }] : [];
+  }).sort((a, b) => b.id - a.id);
+  return { categories: must(cs) as RefCategory[], items };
+}
+
 // ---------- information sharing (PRO <-> Area Coordinator) ----------
 
 export type Share = { id: number; sender_id: string; recipient_id: string; subject: string; remarks: string; sent_at: string; accepted_at: string | null; reply: string;
