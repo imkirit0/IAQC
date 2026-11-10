@@ -43,3 +43,10 @@ assert(late.missedResponse && late.missedCompletion && late.overdue, "in progres
 assert(!lateness({ ...base, status: "Cancelled", response_due: "2026-10-20T10:00:00Z" }, now).overdue, "closed requests are never overdue");
 assert(Math.abs(distanceM({ lat: 10, lng: 76 }, { lat: 10.01, lng: 76 }) - 1112) < 5, "haversine distance");
 console.log("Support workflow checks passed.");
+
+// Infrastructure specifications: free-form rows, cleaned before saving.
+import { cleanSpecs } from "../src/lib/support";
+assert.deepEqual(cleanSpecs([{ label: " RAM ", value: " 8 GB " }, { label: "", value: "" }, { label: "", value: "orphan" }, null]), [{ label: "RAM", value: "8 GB" }, { label: "", value: "orphan" }]);
+assert.deepEqual(cleanSpecs("not a list"), []);
+assert.equal(cleanSpecs(Array.from({ length: 80 }, (_, i) => ({ label: `s${i}`, value: "" }))).length, 50);
+console.log("Infrastructure specification checks passed.");

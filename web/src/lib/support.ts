@@ -10,6 +10,15 @@ export const DIRECTORY = {
   placement: { label: "Placement Officers (GOBS Bank)", dept: "Placement", notes: "Companies / sectors" },
 } as const;
 export type DirKind = keyof typeof DIRECTORY;
+
+/** An infrastructure specification: both parts are whatever the user types, nothing is predefined. */
+export type Spec = { label: string; value: string };
+/** Trims specification rows, drops blank ones and caps the list. A row with a value but no label is kept, for the caller to reject. */
+export function cleanSpecs(rows: unknown): Spec[] {
+  return (Array.isArray(rows) ? rows : []).map(r => ({ label: String(r?.label ?? "").trim().slice(0, 80), value: String(r?.value ?? "").trim().slice(0, 500) }))
+    .filter(s => s.label || s.value).slice(0, 50);
+}
+export const CHECK_OUTCOMES = ["Verified", "Discrepancy"] as const;
 export const CATEGORIES = ["Training", "Academic Support", "PRO Support", "Marketing Support", "Materials Support", "Certification Support", "Operational Support", "Other"];
 export const SR_PRIORITIES = ["Normal", "High", "Urgent"] as const;
 export const SR_STATUSES = ["Submitted", "Under Review", "Awaiting Clarification", "Assigned", "Accepted", "In Progress", "On Hold",

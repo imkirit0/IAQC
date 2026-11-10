@@ -2,7 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
 import { inScope, isPro, seesLocation, type Me } from "./auth";
-import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind } from "./support";
+import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind, type Spec } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
@@ -287,7 +287,12 @@ export async function supportInbox(me: Me) {
 
 // ---------- contact directories ----------
 
-export type DirEntry = { id: number; kind: DirKind; name: string; phone: string; email: string; district: string | null; notes: string; updated_at: string };
+/** qualification, division, gctid and centre_ids are used by trainers only. */
+export type DirEntry = { id: number; kind: DirKind; name: string; phone: string; email: string; district: string | null; notes: string; updated_at: string;
+  qualification: string; division: string; gctid: string; centre_ids: number[] };
+export type Infra = { id: number; centre_id: number; name: string; specs: Spec[]; updated_at: string };
+/** mine = this user may attach trainers and infrastructure to the centre (IAQA: any; an Area Coordinator: their own). */
+export type CentreLite = { id: number; code: string; name: string; district: string; mine: boolean };
 export type DirChange = Omit<DirEntry, "id" | "updated_at"> & { id: number; entry_id: number | null; status: "Pending" | "Verified" | "Rejected"; submitted_by: string; submitted_at: string;
   reviewed_by: string | null; reviewed_at: string | null; remark: string; by?: string; reviewer?: string };
 
@@ -303,13 +308,40 @@ export async function getDirectory(me: Me) {
   const changes = me.role === "iaqc" || me.role === "ac"
     ? (me.role === "ac" ? db().from("directory_changes").select("*").eq("submitted_by", me.id) : db().from("directory_changes").select("*")).neq("kind", "pro").order("id", { ascending: false }).limit(300)
     : null; // ponytail: latest 300 submissions; page them if IAQA needs the older history on screen (audit log keeps it all)
-  const [rs, cs, ch, names] = await Promise.all([db().from("directory").select("*").neq("kind", "pro").order("name"), db().from("centres").select("district, ac_id").eq("active", true), changes, profileNames()]);
-  const centres = must(cs) as { district: string; ac_id: string | null }[];
+  // ponytail: loads every infrastructure entry and filters by centre in code; filter in the query past a few thousand entries
+  const [rs, cs, ch, names, inf] = await Promise.all([db().from("directory").select("*").neq("kind", "pro").order("name"), db().from("centres").select("id, code, name, district, ac_id").eq("active", true).order("name"), changes, profileNames(),
+    db().from("infrastructure").select("*").order("name")]);
+  const centres = must(cs) as { id: number; code: string; name: string; district: string; ac_id: string | null }[];
   const own = me.role === "ac" ? [...new Set(centres.filter(c => c.ac_id === me.id).map(c => c.district))].sort() : null;
   const mine = own ? new Set(own.map(d => d.toLowerCase())) : me.district ? new Set([me.district.toLowerCase()]) : null;
   const entries = (must(rs) as DirEntry[]).filter(e => !mine || !e.district || mine.has(e.district.toLowerCase()));
   const submissions = ch ? (must(ch) as DirChange[]).map(c => ({ ...c, by: names.get(c.submitted_by) ?? "—", reviewer: c.reviewed_by ? names.get(c.reviewed_by) ?? "—" : undefined })) : [];
-  return { entries, submissions, districts: own ?? [...new Set(centres.map(c => c.district))].sort() };
+  // Centres whose infrastructure this user sees: an AC's own, a district account's district, everything for IAQA and head office.
+  const vis = new Set(centres.filter(c => (me.role === "ac" ? c.ac_id === me.id : inScope(me, c.district))).map(c => c.id));
+  const named = new Set([...entries, ...submissions].flatMap(e => e.centre_ids)); // other centres are sent only to name a listed trainer's centres
+  return { entries, submissions, districts: own ?? [...new Set(centres.map(c => c.district))].sort(),
+    centres: centres.filter(c => vis.has(c.id) || named.has(c.id)).map((c): CentreLite => ({ id: c.id, code: c.code, name: c.name, district: c.district, mine: vis.has(c.id) })),
+    infra: (must(inf) as Infra[]).filter(i => vis.has(i.centre_id)) };
+}
+
+// ---------- a centre's Directory records at assessment ----------
+
+export type Check = { subject: "infrastructure" | "trainer"; subject_id: number; label: string; outcome: "Verified" | "Discrepancy"; note: string; at: string; by: string };
+export type CentreRecords = { infra: Infra[]; trainers: (Pick<DirEntry, "id" | "name" | "phone" | "email" | "notes" | "qualification" | "division" | "gctid"> & { centres: string[] })[] };
+
+/** The infrastructure and trainers listed for one centre, as the Directory holds them now. */
+export async function getCentreRecords(centreId: number): Promise<CentreRecords> {
+  const [inf, tr, cs] = await Promise.all([db().from("infrastructure").select("*").eq("centre_id", centreId).order("name"),
+    db().from("directory").select("*").eq("kind", "trainer").contains("centre_ids", [centreId]).order("name"), db().from("centres").select("id, code, name")]);
+  const names = new Map((must(cs) as { id: number; code: string; name: string }[]).map(c => [c.id, `${c.code} ${c.name}`]));
+  return { infra: must(inf) as Infra[], trainers: (must(tr) as DirEntry[]).map(t => ({ id: t.id, name: t.name, phone: t.phone, email: t.email, notes: t.notes, qualification: t.qualification, division: t.division, gctid: t.gctid,
+    centres: t.centre_ids.flatMap(i => names.get(i) ?? []) })) };
+}
+
+/** IAQA's verification per item for one assessment, keyed "subject:id". The latest entry for an item wins. */
+export async function getChecks(assessmentId: number): Promise<Record<string, Check>> {
+  const [rs, names] = await Promise.all([db().from("directory_checks").select("*").eq("assessment_id", assessmentId).order("id"), profileNames()]);
+  return Object.fromEntries((must(rs) as (Omit<Check, "by"> & { user_id: string })[]).map(({ user_id, ...c }) => [`${c.subject}:${c.subject_id}`, { ...c, by: names.get(user_id) ?? "—" }]));
 }
 
 // ---------- information sharing (PRO <-> Area Coordinator) ----------

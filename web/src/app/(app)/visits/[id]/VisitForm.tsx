@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { locate, useHydrated, type Fix } from "@/lib/client";
 import { submitAssessment } from "@/app/actions";
 import { Icon } from "@/components/Icon";
+import { CentreRecords } from "@/components/CentreRecords";
+import type { CentreRecords as CentreRecordsData } from "@/lib/data";
 import { useToast } from "@/components/Providers";
 import { needsRemark, STATUS_LABEL, type SnapCriterion, type Snapshot, type Status } from "@/lib/scoring";
 import { today } from "@/lib/format";
@@ -15,14 +17,14 @@ type CentreInfo = { id: number; name: string; code: string; location: string; di
 const OPTIONS: Status[] = ["C", "P", "N", "NA"];
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Props = { userId: string; centre: CentreInfo; snap: Snapshot; gpsRequired: boolean };
+type Props = { userId: string; centre: CentreInfo; snap: Snapshot; gpsRequired: boolean; records: CentreRecordsData };
 
 // The draft lives in browser storage, so the form renders only after hydration.
 export function VisitForm(props: Props) {
   return useHydrated() ? <Form {...props} /> : <div className="ac-wrap"><div className="skel" style={{ height: 40, width: 320, marginBottom: 16 }} /><div className="skel" style={{ height: 420 }} /></div>;
 }
 
-function Form({ userId, centre, snap, gpsRequired }: Props) {
+function Form({ userId, centre, snap, gpsRequired, records }: Props) {
   const router = useRouter(), toast = useToast();
   const key = draftKey(userId, centre.id);
   const secs = snap.sections, crits = useMemo(() => secs.flatMap(s => s.criteria), [secs]);
@@ -78,6 +80,11 @@ function Form({ userId, centre, snap, gpsRequired }: Props) {
       </div>
 
       {d.changed && <div className="banner warn small"><Icon name="info" /><div>The checklist was updated since this draft was started. Your answers were kept. Please check every section before submitting.</div></div>}
+
+      <details className="card" style={{ marginBottom: 16 }}>
+        <summary style={{ padding: "12px 20px", cursor: "pointer", fontWeight: 600, fontSize: 13.5 }}>Directory records for this centre: {records.infra.length} infrastructure, {records.trainers.length} trainer{records.trainers.length === 1 ? "" : "s"}</summary>
+        <CentreRecords records={records} />
+      </details>
 
       <div className="sticky-prog">
         <div className="row small" style={{ marginBottom: 8 }}><b>{done} of {total} criteria completed</b><span className="spacer" /><span className="faint">{Math.round((done / total) * 100)}%</span></div>

@@ -3,7 +3,8 @@ import Loading from "../../loading";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { inScope, requireRole, seesLocation } from "@/lib/auth";
-import { getAssessment, getScorecard, getSettings, visitLocation } from "@/lib/data";
+import { getAssessment, getCentreRecords, getChecks, getScorecard, getSettings, visitLocation } from "@/lib/data";
+import { CentreRecords } from "@/components/CentreRecords";
 import { fmtDate, fmtDT, pct, ref } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { PrintButton } from "@/components/PrintButton";
@@ -26,6 +27,7 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
   if (a && a.centre_id !== c.id) notFound();
   const isLatest = a && hist.at(-1)?.id === a.id;
   const loc = a && seesLocation(me) ? visitLocation(a.gps, c, (await getSettings()).gps_flag_m) : null;
+  const [records, checks] = a ? await Promise.all([getCentreRecords(c.id), getChecks(a.id)]) : [null, {}];
 
   return (
     <>
@@ -96,6 +98,10 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
                 Thresholds: Green ≥ {a.thresholds.green}%, Yellow ≥ {a.thresholds.yellow}%.</div>
             </Reveal>
             <Reveal delay={0.12} className="card" style={{ marginTop: 22 }}><ItemsTable items={a.items} /></Reveal>
+            <Reveal delay={0.13} className="card" style={{ marginTop: 22 }}>
+              <div className="hd"><h2>Infrastructure and trainers</h2><span className="small faint">from the Directory, as listed now</span></div>
+              <CentreRecords records={records!} checks={checks} assessmentId={me.role === "iaqc" ? a.id : undefined} />
+            </Reveal>
             {a.general_remarks && (
               <Reveal delay={0.14} className="card" style={{ marginTop: 22 }}><div className="hd"><h2>General remarks</h2><span className="small faint">from the Area Coordinator</span></div>
                 <div className="bd"><p className="statement" style={{ fontSize: 17 }}>{a.general_remarks}</p></div></Reveal>

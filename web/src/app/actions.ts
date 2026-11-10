@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
 import { acDistricts, actorsOn, getAsos, getSettings, makeSnapshot, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
-import { ACTIONS, CATEGORIES, can, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind } from "@/lib/support";
+import { ACTIONS, CATEGORIES, can, CHECK_OUTCOMES, cleanSpecs, DIRECTORY, nextStatus, SR_PRIORITIES, srRef, type ActionName, type DirKind, type Spec } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
 export type Result = { ok?: true; error?: string; data?: Record<string, unknown> };
@@ -510,12 +510,23 @@ export async function supportAction(id: number, action: ActionName, input: Suppo
 
 /** IAQA edits the live list directly. An Area Coordinator's addition or edit waits as Pending until IAQA verifies it.
  *  PROs cannot use the Directory at all; other roles only read it. */
-export async function saveDirEntry(id: number | null, input: { kind: DirKind; name: string; phone: string; email: string; district: string; notes: string }) {
+export async function saveDirEntry(id: number | null, input: { kind: DirKind; name: string; phone: string; email: string; district: string; notes: string;
+  qualification?: string; division?: string; gctid?: string; centre_ids?: number[] }) {
   return run(async () => {
     const me = await guard("iaqc", "ac");
     check(Object.hasOwn(DIRECTORY, input.kind) && input.kind !== "pro", "Choose a list."); // the PRO list is retired (rows kept, hidden)
-    const old = id ? await ok(db().from("directory").select("district").eq("id", id).maybeSingle()) as { district: string | null } | null : null;
+    const old = id ? await ok(db().from("directory").select("district, centre_ids").eq("id", id).maybeSingle()) as { district: string | null; centre_ids: number[] } | null : null;
     check(!id || old, "This entry no longer exists.");
+    // Trainers belong to one or more centres: IAQA picks any active centre, an Area Coordinator their own.
+    // An AC's edit leaves the trainer's links to other coordinators' centres as they were.
+    let centre_ids: number[] = [];
+    if (input.kind === "trainer") {
+      const cs = await ok(db().from("centres").select("id, ac_id").eq("active", true)) as { id: number; ac_id: string | null }[];
+      const mine = new Set(cs.filter(c => me.role === "iaqc" || c.ac_id === me.id).map(c => c.id));
+      const kept = me.role === "ac" && old ? old.centre_ids.filter(i => !mine.has(i)) : [];
+      centre_ids = [...new Set([...kept, ...(input.centre_ids ?? []).map(Number).filter(i => mine.has(i))])];
+      check(centre_ids.length, "Choose at least one centre for this trainer.");
+    }
     const d = clean(input.district, 80);
     let district: string | null;
     if (me.role === "ac") {
@@ -524,7 +535,9 @@ export async function saveDirEntry(id: number | null, input: { kind: DirKind; na
       district = mine.find(x => x.toLowerCase() === d.toLowerCase()) ?? (old && (old.district ?? "") === d ? old.district : null);
       check(district || (old && !old.district && !d), "Choose one of your ASOs.");
     } else district = d ? await validDistrict(d) : null;
-    const row = { kind: input.kind, name: clean(input.name, 100), phone: clean(input.phone, 40), email: clean(input.email, 120), notes: clean(input.notes, 1000), district };
+    const trainer = input.kind === "trainer";
+    const row = { kind: input.kind, name: clean(input.name, 100), phone: clean(input.phone, 40), email: clean(input.email, 120), notes: clean(input.notes, 1000), district,
+      qualification: trainer ? clean(input.qualification, 200) : "", division: trainer ? clean(input.division, 100) : "", gctid: trainer ? clean(input.gctid, 40) : "", centre_ids };
     check(row.name, "Name is required.");
     check(row.phone || row.email, "Enter a phone number or an email address.");
     check(!row.email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email), "Email address is invalid.");
@@ -551,7 +564,8 @@ export async function reviewDirChange(id: number, verify: boolean, remark: strin
     check(c, "This submission has already been reviewed.");
     const what = `#${id} ${DIRECTORY[c.kind].label}: ${c.name}`;
     if (!verify) return void await audit(me, "DIRECTORY_REJECTED", `${what} — ${note}`);
-    const live = { kind: c.kind, name: c.name, phone: c.phone, email: c.email, district: c.district, notes: c.notes, updated_at: new Date().toISOString() };
+    const live = { kind: c.kind, name: c.name, phone: c.phone, email: c.email, district: c.district, notes: c.notes,
+      qualification: c.qualification, division: c.division, gctid: c.gctid, centre_ids: c.centre_ids, updated_at: new Date().toISOString() };
     if (c.entry_id) await ok(db().from("directory").update(live).eq("id", c.entry_id));
     else await ok(db().from("directory").insert(live));
     await audit(me, "DIRECTORY_VERIFIED", what);
@@ -567,6 +581,62 @@ export async function deleteDirEntry(id: number, kind: DirKind) {
       .eq("entry_id", id).eq("status", "Pending"));
     const [e] = await ok(db().from("directory").delete().eq("id", id).select("name"));
     await audit(me, "DIRECTORY_DELETED", `${DIRECTORY[kind].label}: ${e?.name ?? `#${id}`}`);
+  });
+}
+
+// ---------- infrastructure (Directory) ----------
+
+/** The centre, if this user may maintain its infrastructure: IAQA any centre, an Area Coordinator their own active ones. */
+async function infraCentre(me: Me, centreId: number) {
+  const { data: c } = await db().from("centres").select("id, code, ac_id, active").eq("id", centreId).maybeSingle();
+  check(c && (me.role === "iaqc" || (c.active && c.ac_id === me.id)), "Choose one of your centres.");
+  return c as { id: number; code: string };
+}
+
+/** An entry is a name plus any number of free-form specifications. An existing entry stays with its centre. */
+export async function saveInfra(id: number | null, input: { centre_id: number; name: string; specs: Spec[] }) {
+  return run(async () => {
+    const me = await guard("iaqc", "ac");
+    const old = id ? await ok(db().from("infrastructure").select("centre_id").eq("id", id).maybeSingle()) as { centre_id: number } | null : null;
+    check(!id || old, "This entry no longer exists.");
+    const c = await infraCentre(me, old?.centre_id ?? Number(input.centre_id));
+    const name = clean(input.name, 120), specs = cleanSpecs(input.specs);
+    check(name, "Name is required.");
+    check(specs.every(s => s.label), "Give every specification a name.");
+    const row = { name, specs, updated_at: new Date().toISOString(), updated_by: me.id };
+    if (id) await ok(db().from("infrastructure").update(row).eq("id", id));
+    else await ok(db().from("infrastructure").insert({ ...row, centre_id: c.id }));
+    await audit(me, id ? "INFRASTRUCTURE_UPDATED" : "INFRASTRUCTURE_CREATED", `${c.code}: ${name} (${specs.length} specifications)`);
+  });
+}
+
+export async function deleteInfra(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc", "ac");
+    const old = await ok(db().from("infrastructure").select("centre_id, name").eq("id", id).maybeSingle()) as { centre_id: number; name: string } | null;
+    check(old, "This entry no longer exists.");
+    const c = await infraCentre(me, old.centre_id);
+    await ok(db().from("infrastructure").delete().eq("id", id));
+    await audit(me, "INFRASTRUCTURE_DELETED", `${c.code}: ${old.name}`);
+  });
+}
+
+/** IAQA verifies one of the centre's infrastructure entries or trainers against an assessment, or records a discrepancy.
+ *  Kept apart from the Directory and the report, neither of which it changes. */
+export async function recordCheck(assessmentId: number, input: { subject: "infrastructure" | "trainer"; subject_id: number; outcome: string; note: string }) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const outcome = CHECK_OUTCOMES.find(o => o === input.outcome), note = clean(input.note, 2000);
+    check(outcome, "Choose Verified or Discrepancy.");
+    check(outcome === "Verified" || note, "Describe the discrepancy observed.");
+    const { data: a } = await db().from("assessments").select("id, centre_id").eq("id", assessmentId).maybeSingle();
+    check(a, "Report not found.");
+    const { data: item } = input.subject === "infrastructure"
+      ? await db().from("infrastructure").select("name").eq("id", input.subject_id).eq("centre_id", a.centre_id).maybeSingle()
+      : await db().from("directory").select("name").eq("id", input.subject_id).eq("kind", "trainer").contains("centre_ids", [a.centre_id]).maybeSingle();
+    check(item, "This item is no longer listed for the centre.");
+    await ok(db().from("directory_checks").insert({ assessment_id: a.id, subject: input.subject === "infrastructure" ? "infrastructure" : "trainer", subject_id: input.subject_id, label: item.name, outcome, note, user_id: me.id }));
+    await audit(me, "DIRECTORY_CHECK", `assessment #${a.id} ${input.subject}: ${item.name} → ${outcome}`);
   });
 }
 

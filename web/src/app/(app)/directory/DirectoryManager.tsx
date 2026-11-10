@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { DirChange, DirEntry } from "@/lib/data";
+import type { CentreLite, DirChange, DirEntry, Infra } from "@/lib/data";
 import { DIRECTORY, type DirKind } from "@/lib/support";
 import { deleteDirEntry, reviewDirChange, saveDirEntry } from "@/app/actions";
 import { Icon } from "@/components/Icon";
@@ -9,18 +9,49 @@ import { Modal, formData } from "@/components/Modal";
 import { useToast } from "@/components/Providers";
 import { PageHead } from "@/components/ui";
 import { fmtDT } from "@/lib/format";
+import { Infrastructure } from "./Infrastructure";
+
+/** Centres a trainer teaches at. Only the centres this user may link are offered; the search hides rows without unticking them. */
+function CentrePicker({ centres, selected }: { centres: CentreLite[]; selected: number[] }) {
+  const [q, setQ] = useState(""), s = q.trim().toLowerCase();
+  return (
+    <div className="f"><span>Centres</span>
+      <div className="picker">
+        <div className="search"><Icon name="search" /><input type="search" value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && e.preventDefault()} placeholder="Find a centre by name or code" aria-label="Find a centre" /></div>
+        <div className="picker-list" style={{ maxHeight: 200 }}>
+          {centres.map(c => (
+            <label key={c.id} className="picker-row" style={s && !`${c.code} ${c.name} ${c.district}`.toLowerCase().includes(s) ? { display: "none" } : undefined}>
+              <input type="checkbox" name="centre_ids" value={c.id} defaultChecked={selected.includes(c.id)} />
+              <span className="code">{c.code}</span><span className="grow">{c.name}</span><span className="small faint">{c.district}</span>
+            </label>
+          ))}
+          {!centres.length && <p className="small faint" style={{ margin: 0, padding: "14px" }}>No centres are assigned to you.</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const KINDS: DirKind[] = ["trainer", "placement"]; // the PRO list is retired: its rows stay in the database, hidden
 const STATUS_BADGE = { Pending: "b-yellow", Verified: "b-green", Rejected: "b-red" } as const;
 type Editing = Partial<DirEntry> & { kind: DirKind; resubmit?: boolean };
 
 /** iaqc edits the live list and verifies submissions; ac proposes additions and edits (pending until verified); read = view only. */
-export function DirectoryManager({ entries, submissions, districts, mode, myDistrict }: { entries: DirEntry[]; submissions: DirChange[]; districts: string[]; mode: "iaqc" | "ac" | "read"; myDistrict: string | null }) {
+export function DirectoryManager({ entries, submissions, districts, centres, infra, mode, myDistrict }: { entries: DirEntry[]; submissions: DirChange[]; districts: string[]; centres: CentreLite[]; infra: Infra[];
+  mode: "iaqc" | "ac" | "read"; myDistrict: string | null }) {
   const router = useRouter(), toast = useToast();
-  const [kind, setKind] = useState<DirKind>("trainer"), [q, setQ] = useState(""), [district, setDistrict] = useState("");
+  const [kind, setKind] = useState<DirKind>("trainer"), [q, setQ] = useState(""), [district, setDistrict] = useState(""), [onInfra, setOnInfra] = useState(false);
   const [editing, setEditing] = useState<Editing | null>(null), [rejecting, setRejecting] = useState<DirChange | null>(null);
-  const canEdit = mode !== "read", s = q.toLowerCase();
-  const rows = entries.filter(e => e.kind === kind && (!s || `${e.name} ${e.phone} ${e.email} ${e.notes}`.toLowerCase().includes(s)) && (!district || !e.district || e.district === district));
+  const canEdit = mode !== "read", s = q.toLowerCase(), isTrainer = kind === "trainer";
+  const centreName = new Map(centres.map(c => [c.id, `${c.code} ${c.name}`]));
+  const centresOf = (e: { centre_ids: number[] }) => e.centre_ids.flatMap(i => centreName.get(i) ?? []);
+  const rows = entries.filter(e => e.kind === kind && (!s || `${e.name} ${e.phone} ${e.email} ${e.notes} ${e.qualification} ${e.division} ${e.gctid} ${centresOf(e).join(" ")}`.toLowerCase().includes(s)) && (!district || !e.district || e.district === district));
+  const tabs = (
+    <div className="seg" role="group" aria-label="List">
+      {KINDS.map(k => <button key={k} type="button" aria-pressed={!onInfra && k === kind} onClick={() => { setKind(k); setOnInfra(false); }}>{DIRECTORY[k].label} {entries.filter(e => e.kind === k).length}</button>)}
+      <button type="button" aria-pressed={onInfra} onClick={() => setOnInfra(true)}>Infrastructure {infra.length}</button>
+    </div>
+  );
   const live = new Map(entries.map(e => [e.id, e]));
   const pending = submissions.filter(c => c.status === "Pending");
   const shown = mode === "iaqc" ? pending : submissions;
@@ -39,10 +70,10 @@ export function DirectoryManager({ entries, submissions, districts, mode, myDist
 
   return (
     <>
-      <PageHead title="Directory" sub={mode === "ac" ? "Trainers and placement officers for your centres. Additions and edits you make are listed once the IAQA Coordinator verifies them."
-        : mode === "iaqc" ? "Trainers and placement officers. Area Coordinators' additions and edits wait below for your verification."
-        : "Trainers and placement officers to contact for your centres."}>
-        {canEdit && <button className="btn primary" onClick={() => setEditing({ kind })}><Icon name="plus" />Add to {DIRECTORY[kind].label}</button>}
+      <PageHead title="Directory" sub={mode === "ac" ? "Trainers, placement officers and infrastructure for your centres. Trainer and placement additions and edits you make are listed once the IAQA Coordinator verifies them."
+        : mode === "iaqc" ? "Trainers, placement officers and centre infrastructure. Area Coordinators' trainer and placement additions and edits wait below for your verification."
+        : "Trainers and placement officers to contact for your centres, and the centres' infrastructure."}>
+        {canEdit && !onInfra && <button className="btn primary" onClick={() => setEditing({ kind })}><Icon name="plus" />Add to {DIRECTORY[kind].label}</button>}
       </PageHead>
 
       {mode !== "read" && (mode === "ac" ? submissions.length > 0 : true) && (
@@ -56,7 +87,8 @@ export function DirectoryManager({ entries, submissions, districts, mode, myDist
                 <tr key={c.id}>
                   <td data-l="List">{DIRECTORY[c.kind].label}</td>
                   <td data-l="Change" className="small">{c.entry_id ? <>Edit{cur && cur.name !== c.name ? <> of <b>{cur.name}</b></> : null}</> : "New entry"}</td>
-                  <td data-l="Name"><b>{c.name}</b>{c.notes && <div className="small muted">{c.notes}</div>}</td>
+                  <td data-l="Name"><b>{c.name}</b>{c.notes && <div className="small muted">{c.notes}</div>}
+                    {c.kind === "trainer" && <div className="small muted">{[c.gctid && `GCTID ${c.gctid}`, c.qualification, c.division, ...centresOf(c)].filter(Boolean).join(" · ")}</div>}</td>
                   <td data-l="Phone / email" className="small">{[c.phone, c.email].filter(Boolean).join(" · ")}</td>
                   <td data-l="ASO">{c.district ?? <span className="faint">All</span>}</td>
                   <td data-l="Submitted" className="small">{mode === "iaqc" && <>{c.by}<br /></>}<span className="faint">{fmtDT(c.submitted_at)}</span></td>
@@ -75,20 +107,24 @@ export function DirectoryManager({ entries, submissions, districts, mode, myDist
         </div>
       )}
 
-      <div className="card">
+      {onInfra ? <Infrastructure items={infra} centres={centres.filter(c => c.mine)} canEdit={canEdit} tabs={tabs} /> : <div className="card">
         <div className="filters">
-          <div className="seg" role="group" aria-label="List">
-            {KINDS.map(k => <button key={k} type="button" aria-pressed={k === kind} onClick={() => setKind(k)}>{DIRECTORY[k].label} {entries.filter(e => e.kind === k).length}</button>)}
-          </div>
+          {tabs}
           <div className="search"><Icon name="search" /><input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, phone, email or notes" aria-label="Search directory" /></div>
           {!myDistrict && districts.length > 1 && <select value={district} onChange={e => setDistrict(e.target.value)} aria-label="ASO"><option value="">All ASOs</option>{districts.map(d => <option key={d}>{d}</option>)}</select>}
           <span className="spacer" /><span className="small faint">{rows.length} shown</span>
         </div>
         <div className="tw"><table>
-          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>ASO</th><th>{DIRECTORY[kind].notes}</th>{canEdit && <th />}</tr></thead>
+          <thead><tr><th>Name</th>{isTrainer && <><th>GCTID</th><th>Qualification</th><th>Division</th><th>Centres</th></>}<th>Phone</th><th>Email</th><th>ASO</th><th>{DIRECTORY[kind].notes}</th>{canEdit && <th />}</tr></thead>
           <tbody>{rows.map(e => (
             <tr key={e.id}>
               <td data-l="Name"><b>{e.name}</b></td>
+              {isTrainer && <>
+                <td data-l="GCTID" className="nowrap">{e.gctid || <span className="faint">—</span>}</td>
+                <td data-l="Qualification">{e.qualification || <span className="faint">—</span>}</td>
+                <td data-l="Division">{e.division || <span className="faint">—</span>}</td>
+                <td data-l="Centres" className="small">{centresOf(e).map(n => <div key={n}>{n}</div>)}{!centresOf(e).length && <span className="faint">Not linked yet</span>}</td>
+              </>}
               <td data-l="Phone" className="nowrap">{e.phone ? <a href={`tel:${e.phone}`}>{e.phone}</a> : <span className="faint">—</span>}</td>
               <td data-l="Email">{e.email ? <a href={`mailto:${e.email}`}>{e.email}</a> : <span className="faint">—</span>}</td>
               <td data-l="ASO">{e.district ?? <span className="faint">All</span>}</td>
@@ -99,21 +135,30 @@ export function DirectoryManager({ entries, submissions, districts, mode, myDist
               </td>}
             </tr>
           ))}
-          {!rows.length && <tr><td data-l="" colSpan={6} className="empty"><b>No entries</b>{canEdit ? "Add the first one with the button above." : "Nothing has been listed here yet."}</td></tr>}</tbody>
+          {!rows.length && <tr><td data-l="" colSpan={10} className="empty"><b>No entries</b>{canEdit ? "Add the first one with the button above." : "Nothing has been listed here yet."}</td></tr>}</tbody>
         </table></div>
-      </div>
+      </div>}
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title={`${editing?.resubmit ? "Correct and resubmit:" : editing?.id ? "Edit" : "Add to"} ${DIRECTORY[editing?.kind ?? kind].label}`}
+      <Modal open={!!editing} onClose={() => setEditing(null)} wide={editing?.kind === "trainer"} title={`${editing?.resubmit ? "Correct and resubmit:" : editing?.id ? "Edit" : "Add to"} ${DIRECTORY[editing?.kind ?? kind].label}`}
         submitLabel={mode === "ac" ? "Send for verification" : editing?.id ? "Save changes" : "Add"}
         onSubmit={async f => {
           const v = formData(f);
-          const r = await saveDirEntry(editing?.id ?? null, { kind: editing!.kind, name: v.name, phone: v.phone, email: v.email, district: v.district ?? "", notes: v.notes });
+          const r = await saveDirEntry(editing?.id ?? null, { kind: editing!.kind, name: v.name, phone: v.phone, email: v.email, district: v.district ?? "", notes: v.notes,
+            qualification: v.qualification, division: v.division, gctid: v.gctid, centre_ids: new FormData(f).getAll("centre_ids").map(Number) });
           if (r.error) return r.error;
           toast(mode === "ac" ? "Sent to the IAQA Coordinator for verification" : editing?.id ? "Entry updated" : "Entry added"); router.refresh();
         }}>
         {editing && <>
           {mode === "ac" && <p className="small muted">The IAQA Coordinator verifies this before it appears in the Directory.{editing.id ? " Until then the current details stay listed." : ""}</p>}
-          <label className="f"><span>Name</span><input name="name" required defaultValue={editing.name} /></label>
+          <label className="f"><span>{editing.kind === "trainer" ? "Trainer name" : "Name"}</span><input name="name" required defaultValue={editing.name} /></label>
+          {editing.kind === "trainer" && <>
+            <div className="grid2">
+              <label className="f"><span>GCTID</span><input name="gctid" maxLength={40} defaultValue={editing.gctid} /></label>
+              <label className="f"><span>Division</span><input name="division" maxLength={100} defaultValue={editing.division} /></label>
+            </div>
+            <label className="f"><span>Qualification</span><input name="qualification" maxLength={200} defaultValue={editing.qualification} /></label>
+            <CentrePicker centres={centres.filter(c => c.mine)} selected={editing.centre_ids ?? []} />
+          </>}
           <div className="grid2">
             <label className="f"><span>Phone</span><input name="phone" type="tel" defaultValue={editing.phone} /></label>
             <label className="f"><span>Email</span><input name="email" type="email" defaultValue={editing.email} /></label>
