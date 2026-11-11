@@ -4,8 +4,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { acDistricts, actorsOn, getAsos, getSettings, makeSnapshot, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
-import { ACTIONS, CATEGORIES, can, CHECK_OUTCOMES, cleanSpecs, DIRECTORY, nextStatus, refFileError, SR_PRIORITIES, srRef, type ActionName, type DirKind, type Spec } from "@/lib/support";
+import { acDistricts, actorsOn, getAsos, getRefSheet, getSettings, makeSnapshot, refScope, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
+import { parseSheet, sheetFile } from "@/lib/sheet";
+import { ACTIONS, CATEGORIES, can, CHECK_OUTCOMES, cleanSpecs, DIRECTORY, isRefSheet, nextStatus, refFileError, SR_PRIORITIES, srRef, type ActionName, type DirKind, type Spec } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
 export type Result = { ok?: true; error?: string; data?: Record<string, unknown> };
@@ -671,6 +672,7 @@ export async function deleteRefCategory(id: number) {
 }
 
 /** Adds an item or updates one. Each save is a new version: earlier versions and their files stay as the item's history.
+ *  A spreadsheet must pass the ASO checks before anything is stored; its rows are saved by ASO for the table view.
  *  Form fields: id (blank = new), category_id, title, content, file (optional; an update without one keeps the current file), remove_file. */
 export async function saveRefItem(form: FormData) {
   return run(async () => {
@@ -683,9 +685,11 @@ export async function saveRefItem(form: FormData) {
     check(cat, "Choose a category.");
     const fileErr = file ? refFileError(file.name, file.size) : null;
     check(!fileErr, fileErr ?? "");
-    const [prev] = id ? await ok(db().from("reference_versions").select("file_path, file_name").eq("item_id", id).order("id", { ascending: false }).limit(1)) as { file_path: string | null; file_name: string | null }[] : [];
+    const sheet = file && isRefSheet(file.name) ? parseSheet(await file.arrayBuffer(), file.name, await getAsos()) : null;
+    if (sheet && "error" in sheet) throw new Invalid(sheet.error);
+    const [prev] = id ? await ok(db().from("reference_versions").select("file_path, file_name, sheet_columns").eq("item_id", id).order("id", { ascending: false }).limit(1)) as { file_path: string | null; file_name: string | null; sheet_columns: string[] | null }[] : [];
     check(!id || prev, "This item no longer exists.");
-    const keep = prev && !form.get("remove_file") ? prev : { file_path: null, file_name: null };
+    const keep = prev && !form.get("remove_file") ? prev : { file_path: null, file_name: null, sheet_columns: null };
     check(content || file || keep.file_path, "Enter the details or attach a file.");
 
     const itemId = id ?? (await ok(db().from("reference_items").insert({ category_id }).select("id").single())).id as number;
@@ -694,11 +698,13 @@ export async function saveRefItem(form: FormData) {
     if (file) {
       const path = `${itemId}/${crypto.randomUUID()}.${file.name.split(".").pop()!.toLowerCase()}`;
       const up = await db().storage.from(REF_BUCKET).upload(path, file, { contentType: file.type || "application/octet-stream" });
-      if (up.error) {
+      const stored = !up.error && sheet ? await db().from("reference_sheet_rows").insert(sheet.parts.map(p => ({ ...p, file_path: path }))) : null;
+      if (up.error || stored?.error) {
+        if (!up.error) await db().storage.from(REF_BUCKET).remove([path]);
         if (!id) await db().from("reference_items").delete().eq("id", itemId); // do not leave an item with no version behind
-        throw new Error(up.error.message);
+        throw new Error((up.error ?? stored!.error!).message);
       }
-      attached = { file_path: path, file_name: clean(file.name, 200) };
+      attached = { file_path: path, file_name: clean(file.name, 200), sheet_columns: sheet?.columns ?? null };
     }
     await ok(db().from("reference_versions").insert({ item_id: itemId, title, content, ...attached, updated_by: me.id }));
     await audit(me, id ? "REFERENCE_UPDATED" : "REFERENCE_CREATED", `${cat.name}: ${title}${file ? ` (file ${attached.file_name})` : ""}`);
@@ -713,17 +719,37 @@ export async function deleteRefItem(id: number) {
     check(vs.length, "This item no longer exists.");
     await ok(db().from("reference_items").delete().eq("id", id));
     const paths = [...new Set(vs.flatMap(v => v.file_path ?? []))];
-    if (paths.length) await db().storage.from(REF_BUCKET).remove(paths);
+    if (paths.length) {
+      await ok(db().from("reference_sheet_rows").delete().in("file_path", paths));
+      await db().storage.from(REF_BUCKET).remove(paths);
+    }
     await audit(me, "REFERENCE_DELETED", `${vs[0].title} (${vs.length} versions)`);
   });
 }
 
-/** A one-minute download link for the file of one version (current or historical). Any signed-in user may read reference data. */
+/** The table of one version (current or historical), holding only the rows this user may read. */
+export async function refSheet(versionId: number): Promise<Result> {
+  try {
+    const sheet = await getRefSheet(await guard("ac", "iaqc", "cmd", "dept"), versionId);
+    return sheet ? { ok: true, data: { sheet } } : { error: "This table is no longer available." };
+  } catch (e) {
+    return { error: e instanceof Forbidden ? e.message : "The table could not be loaded. Please try again." };
+  }
+}
+
+/** Downloads the file of one version (current or historical). Users limited to certain ASOs never get an original spreadsheet, which holds every ASO's rows:
+ *  they receive a file of their own rows instead. Everyone else, and every non-spreadsheet file, gets a one-minute download link. */
 export async function refFileUrl(versionId: number): Promise<Result> {
   try {
-    await guard("ac", "iaqc", "cmd", "dept");
+    const me = await guard("ac", "iaqc", "cmd", "dept");
     const { data: v } = await db().from("reference_versions").select("file_path, file_name").eq("id", versionId).maybeSingle();
     if (!v?.file_path) return { error: "This file is no longer available." };
+    if (isRefSheet(v.file_name ?? "") && await refScope(me)) {
+      const sheet = await getRefSheet(me, versionId);
+      if (!sheet) return { error: "This spreadsheet is awaiting re-upload by the IAQA Coordinator with an ASO Name column." }; // uploaded before ASO filtering: its rows cannot be separated
+      if (!sheet.rows.length) return { error: "This file has no rows for your ASO." };
+      return { ok: true, data: { base64: sheetFile(sheet.columns, sheet.rows.map(r => r.cells)), name: `${v.file_name!.replace(/\.\w+$/, "")} - my ASO.xlsx` } };
+    }
     const { data, error } = await db().storage.from(REF_BUCKET).createSignedUrl(v.file_path, 60, { download: v.file_name ?? true });
     if (error || !data) return { error: "The file could not be opened. Please try again." };
     return { ok: true, data: { url: data.signedUrl } };

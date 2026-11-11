@@ -31,6 +31,10 @@ export function refFileError(name: string, size: number): string | null {
   if (size > REF_MAX_BYTES) return "The file is larger than 4 MB.";
   return size > 0 ? null : "The file is empty.";
 }
+/** Spreadsheets are read into tables and filtered by ASO; other files stay plain attachments. */
+export const isRefSheet = (name: string) => /\.(xlsx|xls|csv)$/i.test(name);
+/** How ASO names are matched: spreadsheets, centres and accounts may differ in case and spacing. */
+export const asoKey = (name: string) => name.trim().replace(/\s+/g, " ").toLowerCase();
 export const CATEGORIES = ["Training", "Academic Support", "PRO Support", "Marketing Support", "Materials Support", "Certification Support", "Operational Support", "Other"];
 export const SR_PRIORITIES = ["Normal", "High", "Urgent"] as const;
 export const SR_STATUSES = ["Submitted", "Under Review", "Awaiting Clarification", "Assigned", "Accepted", "In Progress", "On Hold",

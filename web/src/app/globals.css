@@ -513,6 +513,13 @@ td a b{white-space:nowrap}
   .ph{align-items:flex-start} .ph>.btn{flex:1 1 auto}
 }
 @media (pointer:coarse){ .btn{min-height:40px} .btn.sm{min-height:36px;padding:6px 12px} .steps button{min-height:38px} }
+/* Reference Data spreadsheets stay real tables on every screen, scrolling both ways inside their own box; headings stick (th is sticky). */
+.sheet{overflow:auto;max-height:65vh;-webkit-overflow-scrolling:touch}
+.sheet table{width:max-content;min-width:100%}
+.sheet td{font-size:13px;max-width:320px;white-space:pre-wrap;overflow-wrap:anywhere;vertical-align:top}
+/* A centre's IAQA status on its card: colour only; hollow until a report has been evaluated. */
+.status-dot{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.status-dot.Green{background:var(--green-mark);box-shadow:none} .status-dot.Yellow{background:var(--amber-mark);box-shadow:none} .status-dot.Red{background:var(--red-mark);box-shadow:none}
 /* tables become stacked cards; each cell's data-l (its column header) prints as a label */
 @media (max-width:700px){
   .tw table,.tw tbody{display:block} .tw thead{display:none}

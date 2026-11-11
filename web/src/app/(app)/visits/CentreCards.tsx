@@ -6,7 +6,9 @@ import { Icon } from "@/components/Icon";
 import { fmtDate } from "@/lib/format";
 import { draftKey } from "./draft";
 
-type C = { id: number; code: string; name: string; location: string; district: string; last_visit: string | null };
+type C = { id: number; code: string; name: string; location: string; district: string; last_visit: string | null; status: string | null };
+/** Spoken names for the status colours. Anything else (no report yet, or an unscorable one) is the neutral indicator. */
+const STATUS: Record<string, string> = { Green: "Satisfactory", Yellow: "Needs improvement", Red: "Critical attention required" };
 
 export function CentreCards({ userId, centres }: { userId: string; centres: C[] }) {
   const ids = useStorageValue(() => centres.filter(c => localStorage.getItem(draftKey(userId, c.id))).map(c => c.id).join(","));
@@ -21,7 +23,10 @@ export function CentreCards({ userId, centres }: { userId: string; centres: C[] 
           <motion.div key={c.id} className="card" variants={{ h: { opacity: 0, y: 12 }, s: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
             whileHover={{ y: -3, boxShadow: "var(--shadow-lg)" }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>
             <div className="bd">
-              <div className="code">{c.code}</div>
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div className="code">{c.code}</div>
+                <span className={`status-dot ${STATUS[c.status ?? ""] ? c.status : ""}`} role="img" aria-label={`IAQA status: ${STATUS[c.status ?? ""] ?? "not yet evaluated"}`} />
+              </div>
               <h2 style={{ margin: "4px 0 6px" }}>{c.name}</h2>
               <div className="small muted" style={{ marginBottom: 14 }}>{c.location}, {c.district}<br />Last visit {fmtDate(c.last_visit)}</div>
               {draft && <span className="draft">Draft in progress</span>}

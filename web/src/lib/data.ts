@@ -2,7 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { db } from "./supabase";
 import { inScope, isPro, seesLocation, type Me } from "./auth";
-import { DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind, type Spec } from "./support";
+import { asoKey, DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind, type Spec } from "./support";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
@@ -106,6 +106,15 @@ export async function getCentres(opts: { acId?: string; district?: string | null
   const last = new Map<number, string>();
   (must(visits) as { centre_id: number; visit_date: string }[]).forEach(v => { if (v.visit_date > (last.get(v.centre_id) ?? "")) last.set(v.centre_id, v.visit_date); });
   return (must(cs) as Centre[]).filter(c => !opts.district || c.district.toLowerCase() === opts.district.toLowerCase()).map(c => ({ ...c, ac_name: c.ac_id ? names.get(c.ac_id) ?? null : null, last_visit: last.get(c.id) ?? null }));
+}
+
+/** Each centre's current status: the category of its latest submitted report, IAQA's risk-level decision included. Centres with no report are absent. */
+export async function getCentreStatuses(centreIds: number[]): Promise<Record<number, Category>> {
+  if (!centreIds.length) return {};
+  const rows = must(await db().from("assessments").select("*").in("centre_id", centreIds).order("visit_date").order("id")) as AssessmentRow[];
+  const latest = [...new Map(rows.map(a => [a.centre_id, a])).values()], names = new Map<string, string>(); // later rows replace earlier ones; names are not shown here
+  const ovr = await overrides(latest.map(a => a.id), names);
+  return Object.fromEntries(latest.map(a => [a.centre_id, summarise(a, names, ovr).category]));
 }
 
 export type RankRow = Centre & {
@@ -346,7 +355,7 @@ export async function getChecks(assessmentId: number): Promise<Record<string, Ch
 
 // ---------- reference data ----------
 
-export type RefVersion = { id: number; item_id: number; title: string; content: string; file_name: string | null; updated_at: string; by: string };
+export type RefVersion = { id: number; item_id: number; title: string; content: string; file_name: string | null; updated_at: string; by: string; sheet: boolean };
 /** An item as shown: its latest version, with the earlier ones (newest first) as history. */
 export type RefItem = RefVersion & { category_id: number; history: RefVersion[] };
 export type RefCategory = { id: number; name: string };
@@ -355,13 +364,33 @@ export type RefCategory = { id: number; name: string };
 // ponytail: loads every version of every item; fetch history on demand once the library runs to thousands of updates
 export async function getReference(): Promise<{ categories: RefCategory[]; items: RefItem[] }> {
   const [cs, is, vs, names] = await Promise.all([db().from("reference_categories").select("id, name").order("name"), db().from("reference_items").select("id, category_id"),
-    db().from("reference_versions").select("id, item_id, title, content, file_name, updated_at, updated_by").order("id", { ascending: false }), profileNames()]);
-  const versions = (must(vs) as (Omit<RefVersion, "by"> & { updated_by: string })[]).map(({ updated_by, ...v }) => ({ ...v, by: names.get(updated_by) ?? "—" }));
+    db().from("reference_versions").select("id, item_id, title, content, file_name, updated_at, updated_by, sheet_columns").order("id", { ascending: false }), profileNames()]);
+  const versions = (must(vs) as (Omit<RefVersion, "by" | "sheet"> & { updated_by: string; sheet_columns: string[] | null })[]).map(({ updated_by, sheet_columns, ...v }) => ({ ...v, sheet: !!sheet_columns, by: names.get(updated_by) ?? "—" }));
   const items = (must(is) as { id: number; category_id: number }[]).flatMap(i => {
     const [latest, ...history] = versions.filter(v => v.item_id === i.id);
     return latest ? [{ ...latest, category_id: i.category_id, history }] : [];
   }).sort((a, b) => b.id - a.id);
   return { categories: must(cs) as RefCategory[], items };
+}
+
+export type RefSheet = { columns: string[]; rows: { n: number; aso: string; cells: string[] }[] };
+
+/** The ASOs whose spreadsheet rows this user may read, or null for all: an Area Coordinator's are those of their centres,
+ *  a district account's its district. An Area Coordinator with no centres gets an empty list, so no rows. */
+export async function refScope(me: Me): Promise<string[] | null> {
+  if (me.role === "ac") return acDistricts(me.id);
+  return me.district ? [me.district] : null;
+}
+
+/** One version's table, holding only the rows this user may read: the database query itself is limited to the user's ASOs. Null when the version has no table. */
+export async function getRefSheet(me: Me, versionId: number): Promise<RefSheet | null> {
+  const v = must(await db().from("reference_versions").select("file_path, sheet_columns").eq("id", versionId).maybeSingle()) as { file_path: string | null; sheet_columns: string[] | null } | null;
+  if (!v?.file_path || !v.sheet_columns) return null;
+  const scope = await refScope(me);
+  if (scope && !scope.length) return { columns: v.sheet_columns, rows: [] };
+  const q = db().from("reference_sheet_rows").select("aso, rows").eq("file_path", v.file_path);
+  const parts = must(await (scope ? q.in("aso_key", scope.map(asoKey)) : q)) as { aso: string; rows: { n: number; cells: string[] }[] }[];
+  return { columns: v.sheet_columns, rows: parts.flatMap(p => p.rows.map(r => ({ ...r, aso: p.aso }))).sort((a, b) => a.n - b.n) };
 }
 
 // ---------- information sharing (PRO <-> Area Coordinator) ----------

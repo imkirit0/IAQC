@@ -100,3 +100,9 @@ Push to GitHub and import into Vercel (or any Node host), then set the same thre
 - Notifications are in-app only (count on the Support tab and the request lists); there is no email or SMS.
 - Support requests have no file attachments, and a requester's original text cannot be corrected (only answered through clarification).
 - Times display in Asia/Kolkata.
+
+## Reference Data spreadsheets
+
+Excel and CSV uploads must have **ASO Name** as the first column, with an ASO known to the Directory on every row. The first sheet is shown as a searchable table.
+Rows are stored per ASO (`reference_sheet_rows`), and the database query is limited to the viewer's ASOs: an Area Coordinator's come from their centres, a district account's from its district.
+Only users who can see every ASO download the original file, since it holds all ASOs' rows. Everyone else downloads a file of their own rows.
