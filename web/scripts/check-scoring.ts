@@ -98,3 +98,58 @@ const old = parseSheet(new Uint8Array(XLSX.write(oldBook, { type: "array", bookT
 assert(!("error" in old) && old.parts[0].rows[0].cells[1] === "1", "legacy .xls files are read");
 assert.match(failure(parseSheet(csv("%PDF-1.7 not a spreadsheet"), "a.xlsx", ASOS)), /ASO Name|could not be read/, "a non-spreadsheet is refused");
 console.log("Reference Data spreadsheet checks passed.");
+
+// Student feedback: form rules, server-side answer validation, file content checks, statistics, export.
+import { blankQuestion, cleanForm, exportGrid, feedbackStats, FB_TYPES, fileContentMatches, formErrors, validateAnswers, type FbForm, type FbQuestion, type FbRow, type FbType } from "../src/lib/feedback";
+import { gridFile, safeCsvCell } from "../src/lib/sheet";
+const fq = (type: FbType, id: string, extra: Partial<FbQuestion> = {}): FbQuestion => ({ ...blankQuestion(type, id), title: `${type} question`, ...extra });
+const opts = { options: ["Red", "Blue", "Green"] };
+const fb: FbForm = { title: "T", description: "", items: [
+  { id: "s1", kind: "s", title: "Part A", help: "" }, fq("short", "a", { required: true, min: 2, max: 5 }), fq("long", "b"), fq("choice", "c", opts), fq("checkbox", "d", { ...opts, min: 1, max: 2 }), fq("dropdown", "e", opts),
+  fq("scale", "f"), fq("stars", "g"), fq("date", "h", { from: "2026-01-01", to: "2026-12-31" }), fq("time", "i", { from: "09:00", to: "17:00" }), fq("number", "j", { min: 0, max: 10, integer: true }), fq("range", "k", { min: 0, max: 10, step: 2 }), fq("email", "l"), fq("file", "m", { required: true, fileTypes: ["pdf"], maxMb: 1 }),
+] };
+assert.equal(Object.keys(FB_TYPES).length, 13, "all thirteen question types");
+assert.deepEqual(formErrors(fb), []);
+assert.deepEqual(cleanForm(JSON.parse(JSON.stringify(fb))), fb, "cleaning a good form changes nothing");
+assert.equal(JSON.stringify(cleanForm({ ...fb, items: [...fb.items].reverse().reverse() })), JSON.stringify(fb), "key order is stable, so an unchanged form is recognised");
+assert.equal(cleanForm({ items: [{ id: "x", kind: "q", type: "script" }, { id: "../bad", kind: "s" }, { id: "a", kind: "s" }, { id: "a", kind: "s" }] }).items.length, 1, "unknown types, bad and repeated ids are dropped");
+const pub = (q: FbQuestion) => formErrors({ title: "T", description: "", items: [q] });
+assert.match(formErrors({ title: "", description: "", items: [] }).join(" "), /title.*at least one question/);
+assert.match(pub(fq("short", "z", { title: "" }))[0], /title/);
+assert.match(pub(fq("choice", "z", { options: ["A", "a"] }))[0], /same option/);
+assert.match(pub(fq("choice", "z", { options: ["A", ""] }))[0], /no blank/);
+assert.match(pub(fq("scale", "z", { min: 3 }))[0], /scale/);
+assert.match(pub(fq("stars", "z", { max: 2 }))[0], /stars/);
+assert.match(pub(fq("range", "z", { min: 5, max: 1 }))[0], /minimum/);
+assert.match(pub(fq("range", "z", { step: 0 }))[0], /step/);
+assert.match(pub(fq("number", "z", { min: 5, max: 1 }))[0], /minimum/);
+assert.match(pub(fq("file", "z", { maxMb: 99 }))[0], /file size/);
+assert.match(pub(fq("date", "z", { from: "2026-02-31" }))[0], /invalid/);
+const full = { a: "abc", b: "long", c: "Red", d: ["Green", "Red"], e: "Blue", f: "4", g: "5", h: "2026-06-01", i: "10:30", j: "7", k: "4", l: "me@x.org", m: { name: "a.pdf", size: 100 } };
+const okA = validateAnswers(fb, { ...full, evil: "ignored" });
+assert.deepEqual(okA.errors, {});
+assert.deepEqual(okA.answers.d, ["Red", "Green"], "selections keep the form's order");
+assert.equal(okA.answers.f, 4); assert.equal(okA.answers.k, 4); assert(!("evil" in okA.answers), "fields not on the form are ignored");
+const bad = (patch: object, id: string) => { const e = validateAnswers(fb, { ...full, ...patch }).errors; assert(e[id], `${id} should fail for ${JSON.stringify(patch)}`); };
+bad({ a: "" }, "a"); bad({ a: "x" }, "a"); bad({ a: "toolong" }, "a"); bad({ c: "Pink" }, "c"); bad({ d: ["Red", "Green", "Blue"] }, "d"); bad({ d: ["Pink"] }, "d"); bad({ e: "Pink" }, "e");
+bad({ f: "6" }, "f"); bad({ g: "0" }, "g"); bad({ g: "2.5" }, "g"); bad({ h: "2026-02-31" }, "h"); bad({ h: "2027-01-01" }, "h"); bad({ i: "25:00" }, "i"); bad({ i: "08:00" }, "i");
+bad({ j: "abc" }, "j"); bad({ j: "1.5" }, "j"); bad({ j: "11" }, "j"); bad({ k: "3" }, "k"); bad({ k: "12" }, "k"); bad({ l: "not-an-email" }, "l"); bad({ m: undefined }, "m"); bad({ m: { name: "a.exe", size: 10 } }, "m"); bad({ m: { name: "a.pdf", size: 2 * 1024 * 1024 } }, "m");
+assert.deepEqual(Object.keys(validateAnswers(fb, { a: "abc", m: full.m }).errors), [], "optional questions may be left blank");
+assert(fileContentMatches("a.pdf", new TextEncoder().encode("%PDF-1.7")));
+assert(!fileContentMatches("a.pdf", new TextEncoder().encode("<html>")), "a renamed web page is refused");
+assert(!fileContentMatches("a.png", new TextEncoder().encode("MZ......")), "a renamed program is refused");
+assert(!fileContentMatches("a.txt", new Uint8Array([65, 0, 66])), "binary is not text");
+const v2: FbForm = { title: "T", description: "", items: [fq("choice", "c", { title: "New wording", options: ["Red", "Blue"] }), fq("stars", "g")] };
+const vs = new Map([[1, fb], [2, v2]]);
+const resp: FbRow[] = [{ id: 2, version: 2, answers: { c: "Red", g: 4 }, submitted_at: "2026-11-02T10:00:00Z", status: "Verified", verified_at: "2026-11-03T10:00:00Z" }, { id: 1, version: 1, answers: { c: "Green", g: 2, a: "=1+1" }, submitted_at: "2026-11-01T10:00:00Z", status: "Pending Verification", verified_at: null }];
+const stats = feedbackStats(vs, resp), st = (id: string) => stats.find(x => x.id === id)!;
+assert.equal(st("c").title, "New wording", "a reworded question uses its latest title");
+assert.deepEqual(st("c").counts, [["Red", 1], ["Blue", 0], ["Green", 1]], "answers to an option since removed still count");
+assert.equal(st("g").avg, 3); assert.equal(st("g").answered, 2);
+const grid = exportGrid(vs, resp, a => a ?? "");
+assert.deepEqual(grid[0].slice(0, 6), ["Response", "Submitted", "Status", "Verified", "Form version", "New wording"]);
+assert.equal(grid[2][5], "Green", "an old response keeps its original answer");
+assert.equal(safeCsvCell("=1+1"), "'=1+1", "a formula in an answer cannot run from a CSV"); assert.equal(safeCsvCell(5), 5);
+assert(gridFile(grid, "csv").toString("utf8").includes("'=1+1"));
+assert.equal(XLSX.read(gridFile(grid, "xlsx"), { type: "buffer" }).SheetNames[0], "Responses");
+console.log("Student feedback checks passed.");

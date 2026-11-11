@@ -520,6 +520,38 @@ td a b{white-space:nowrap}
 /* A centre's IAQA status on its card: colour only; hollow until a report has been evaluated. */
 .status-dot{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
 .status-dot.Green{background:var(--green-mark);box-shadow:none} .status-dot.Yellow{background:var(--amber-mark);box-shadow:none} .status-dot.Red{background:var(--red-mark);box-shadow:none}
+/* Student feedback: the public form and the Coordinator's builder. */
+.fb-page{min-height:100dvh;padding:28px 16px 64px}
+.fb-wrap{max-width:720px;margin:0 auto}
+.fb-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px;font-weight:600}
+.fb-q{padding:20px;border-bottom:1px solid var(--rule)} .fb-q:last-of-type{border-bottom:0}
+.fb-q.bad{box-shadow:inset 3px 0 0 var(--red-mark)}
+.fb-q>.t,.fb-q legend{font-weight:600;font-size:15px;display:block;padding:0;margin-bottom:4px}
+.fb-q fieldset{border:0;padding:0;margin:0;min-width:0}
+.fb-q .help{font-size:13px;color:var(--ink-2);margin-bottom:10px;white-space:pre-wrap}
+.fb-sec{padding:20px;background:var(--sunk);border-bottom:1px solid var(--rule)} .fb-sec h2{margin:0}
+.fb-scale{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fb-scale label{min-width:44px;min-height:44px;display:grid;place-items:center;border:1px solid var(--rule-2);border-radius:var(--r);cursor:pointer;font-weight:500}
+.fb-scale label:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.fb-scale label:has(input:focus-visible),.fb-stars label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:1px}
+.fb-scale input,.fb-stars input{position:absolute;opacity:0;pointer-events:none}
+.fb-ends{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--ink-3);margin-top:6px}
+.fb-stars{display:flex;flex-wrap:wrap;gap:2px}
+.fb-stars label{width:44px;height:44px;display:grid;place-items:center;cursor:pointer;color:var(--rule-2)} .fb-stars label.on{color:var(--amber-mark)}
+.fb-stars svg{width:30px;height:30px} .fb-stars label.on svg{fill:currentColor}
+.fb-trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.fb-item{border:1px solid var(--rule);border-radius:var(--r-lg);background:var(--sheet);margin-bottom:12px;list-style:none}
+.fb-item .top{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.fb-item .body{padding:14px}
+.fb-grip{cursor:grab;touch-action:none;color:var(--ink-3);padding:6px;display:grid;place-items:center} .fb-grip:active{cursor:grabbing}
+.fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0 12px}
+.fb-opt{display:flex;gap:6px;align-items:center;margin-bottom:6px} .fb-opt input{flex:1;min-width:0}
+.fb-types{display:flex;flex-wrap:wrap;gap:4px 14px} .fb-types .check{margin-bottom:4px}
+.fb-qr{background:#fff;width:132px;height:132px;padding:6px;border-radius:var(--r);flex:none} .fb-qr svg{display:block;width:100%;height:100%}
+.fb-link{flex:1 1 240px;min-width:0}
+.fb-bars{list-style:none;margin:10px 0 0;padding:0}
+.fb-bars li{display:grid;grid-template-columns:minmax(0,1fr) 110px 60px;gap:12px;align-items:center;padding:4px 0;font-size:13.5px}
+.fb-bars .bar{margin:0} .fb-bars .bar>i{background:var(--accent)} .fb-bars span:last-child{text-align:right;font-variant-numeric:tabular-nums}
 /* tables become stacked cards; each cell's data-l (its column header) prints as a label */
 @media (max-width:700px){
   .tw table,.tw tbody{display:block} .tw thead{display:none}

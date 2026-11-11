@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+const PUBLIC = ["/login", "/feedback"]; // /feedback is the student form: no account needed
+
 // Refreshes the Supabase session cookie on navigation and sends signed-out visitors to /login.
 // Authorisation itself happens server-side in every page and action (see lib/auth.ts).
 export async function proxy(request: NextRequest) {
@@ -16,7 +18,7 @@ export async function proxy(request: NextRequest) {
     },
   });
   const { data } = await supabase.auth.getUser();
-  if (!data.user && request.nextUrl.pathname !== "/login") return NextResponse.redirect(new URL("/login", request.url));
+  if (!data.user && !PUBLIC.includes(request.nextUrl.pathname)) return NextResponse.redirect(new URL("/login", request.url));
   return response;
 }
 

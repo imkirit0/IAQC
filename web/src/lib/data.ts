@@ -1,8 +1,10 @@
 import "server-only";
 import { connection } from "next/server";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { db } from "./supabase";
 import { inScope, isPro, seesLocation, type Me } from "./auth";
 import { asoKey, DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind, type Spec } from "./support";
+import { cleanForm, type FbForm, type FbRow } from "./feedback";
 import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
@@ -391,6 +393,93 @@ export async function getRefSheet(me: Me, versionId: number): Promise<RefSheet |
   const q = db().from("reference_sheet_rows").select("aso, rows").eq("file_path", v.file_path);
   const parts = must(await (scope ? q.in("aso_key", scope.map(asoKey)) : q)) as { aso: string; rows: { n: number; cells: string[] }[] }[];
   return { columns: v.sheet_columns, rows: parts.flatMap(p => p.rows.map(r => ({ ...r, aso: p.aso }))).sort((a, b) => a.n - b.n) };
+}
+
+// ---------- student feedback ----------
+
+const ticketSign = (body: string) => createHmac("sha256", process.env.SUPABASE_SECRET_KEY!).update(`feedback-ticket:${body}`).digest("base64url");
+/** Issued each time the form is opened. A submission needs a genuine ticket old enough for a person to have filled the form, and each ticket counts once. */
+export function feedbackTicket() {
+  const body = `${Date.now()}.${randomUUID()}`;
+  return `${body}.${ticketSign(body)}`;
+}
+/** How long ago the ticket was issued, in ms, or null if it is not one of ours. */
+export function ticketAge(ticket: string): number | null {
+  const at = ticket.lastIndexOf(".");
+  if (at < 1) return null;
+  const a = Buffer.from(ticket.slice(at + 1)), b = Buffer.from(ticketSign(ticket.slice(0, at)));
+  return a.length === b.length && timingSafeEqual(a, b) ? Date.now() - Number(ticket.split(".")[0]) : null;
+}
+export const hashIp = (ip: string) => createHmac("sha256", process.env.SUPABASE_SECRET_KEY!).update(`feedback-ip:${ip}`).digest("base64url");
+
+export type FbFormRow = { draft: unknown; version: number | null; active: boolean; updated_at: string };
+
+export async function getFeedbackForm() {
+  const f = must(await db().from("feedback_form").select("draft, version, active, updated_at").eq("id", 1).single()) as FbFormRow;
+  const v = f.version == null ? null : must(await db().from("feedback_versions").select("form, published_at").eq("version", f.version).single()) as { form: FbForm; published_at: string };
+  return { draft: cleanForm(f.draft), version: f.version, active: f.active, updated_at: f.updated_at, published: v ? cleanForm(v.form) : null, published_at: v?.published_at ?? null };
+}
+
+/** All a student's browser ever receives: the current questions, or null while collection is closed. */
+export async function getPublicFeedback() {
+  const f = await getFeedbackForm();
+  return f.active && f.published ? { version: f.version!, form: f.published } : null;
+}
+
+export type FbFilter = { status?: string; from?: string; to?: string; q?: string };
+const isDay = (d?: string) => !!d && /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d));
+const RESPONSE_COLUMNS = "id, version, answers, submitted_at, status, verified_at";
+
+/** The responses query with the filters applied. Dates are whole days in India time, as displayed. */
+function feedbackQuery(f: FbFilter, count?: "exact") {
+  let q = db().from("feedback_responses").select(RESPONSE_COLUMNS, count ? { count } : undefined);
+  if (f.status === "Pending Verification" || f.status === "Verified") q = q.eq("status", f.status);
+  if (isDay(f.from)) q = q.gte("submitted_at", `${f.from}T00:00:00+05:30`);
+  if (isDay(f.to)) q = q.lte("submitted_at", `${f.to}T23:59:59.999+05:30`);
+  const s = f.q?.trim();
+  if (s) q = q.ilike("search_text", `%${s.replace(/[\\%_]/g, "\\$&")}%`);
+  return q.order("id", { ascending: false });
+}
+
+export const FEEDBACK_PAGE_SIZE = 50;
+export async function listFeedback(f: FbFilter, page: number) {
+  const from = (page - 1) * FEEDBACK_PAGE_SIZE;
+  const r = await feedbackQuery(f, "exact").range(from, from + FEEDBACK_PAGE_SIZE - 1);
+  return { rows: must(r) as unknown as FbRow[], matched: r.count ?? 0 };
+}
+
+/** Every matching response, fetched a page at a time because the database returns at most 1000 rows per request. */
+// ponytail: holds them all in memory for statistics and export; aggregate in SQL past tens of thousands of responses
+export async function allFeedback(f: FbFilter) {
+  const rows: FbRow[] = [];
+  for (let at = 0; ; at += 1000) {
+    const page = must(await feedbackQuery(f).range(at, at + 999)) as unknown as FbRow[];
+    rows.push(...page);
+    if (page.length < 1000) return rows;
+  }
+}
+
+export async function feedbackCounts() {
+  const n = async (status?: string) => {
+    let q = db().from("feedback_responses").select("id", { count: "exact", head: true });
+    if (status) q = q.eq("status", status);
+    return (await q).count ?? 0;
+  };
+  const [total, pending, verified] = await Promise.all([n(), n("Pending Verification"), n("Verified")]);
+  return { total, pending, verified };
+}
+
+export async function feedbackVersions() {
+  const rows = must(await db().from("feedback_versions").select("version, form")) as { version: number; form: FbForm }[];
+  return new Map(rows.map(r => [r.version, r.form]));
+}
+
+/** One response with the questions exactly as they stood when the student answered. */
+export async function getFeedbackResponse(id: number) {
+  const r = must(await db().from("feedback_responses").select(`${RESPONSE_COLUMNS}, verified_by`).eq("id", id).maybeSingle()) as unknown as (FbRow & { verified_by: string | null }) | null;
+  if (!r) return null;
+  const [v, names] = await Promise.all([db().from("feedback_versions").select("form, published_at").eq("version", r.version).single(), profileNames()]);
+  return { ...r, form: (must(v) as { form: FbForm }).form, verifier: r.verified_by ? names.get(r.verified_by) ?? "—" : null };
 }
 
 // ---------- information sharing (PRO <-> Area Coordinator) ----------

@@ -27,6 +27,8 @@ const P = {
   chevron: "M6 9l6 6 6-6",
   inbox: "M3 13h5l1.5 3h5l1.5-3h5M5.5 5h13L21 13v6H3v-6z",
   share: "M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M16 7l-4-4-4 4M12 3v12",
+  star: "M12 3l2.8 5.9 6.2.9-4.5 4.5 1.1 6.4L12 17.6l-5.6 3.1 1.1-6.4L3 9.8l6.2-.9L12 3z",
+  grip: "M9 5v.01M15 5v.01M9 12v.01M15 12v.01M9 19v.01M15 19v.01",
   pin: "M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
 } as const;
 export type IconName = keyof typeof P;

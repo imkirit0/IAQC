@@ -101,6 +101,13 @@ Push to GitHub and import into Vercel (or any Node host), then set the same thre
 - Support requests have no file attachments, and a requester's original text cannot be corrected (only answered through clarification).
 - Times display in Asia/Kolkata.
 
+## Student feedback
+
+One form, managed by the IAQA Coordinator under **Student feedback**, answered by students at the public `/feedback` page without an account. The address never changes.
+Editing changes a draft; **Publish** makes it a new, permanently stored version, and each response stays tied to the version it answered, so later edits never alter past feedback.
+Responses cannot be edited or deleted (database triggers); the only change allowed is Pending Verification to Verified, once.
+The public action validates every answer on the server and is protected by a signed one-use ticket, a trap field and a per-network rate limit. Uploads are checked by content and kept in a private bucket.
+
 ## Reference Data spreadsheets
 
 Excel and CSV uploads must have **ASO Name** as the first column, with an ASO known to the Directory on every row. The first sheet is shown as a searchable table.

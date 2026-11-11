@@ -14,8 +14,8 @@ async function main() {
     await db.query(readFileSync(`supabase/migrations/${f}`, "utf8")); // each file is idempotent
     console.log(`applied ${f}`);
   }
-  const { rows } = await db.query("select count(*)::int as n from information_schema.tables where table_schema = 'public' and table_name in ('profiles','centres','sections','criteria','settings','assessments','reviews','audit_log','support_requests','support_events','directory','directory_changes','info_shares','infrastructure','directory_checks','reference_categories','reference_items','reference_versions','reference_sheet_rows')");
-  console.log(`${rows[0].n}/19 RDS tables present`);
+  const { rows } = await db.query("select count(*)::int as n from information_schema.tables where table_schema = 'public' and table_name in ('profiles','centres','sections','criteria','settings','assessments','reviews','audit_log','support_requests','support_events','directory','directory_changes','info_shares','infrastructure','directory_checks','reference_categories','reference_items','reference_versions','reference_sheet_rows','feedback_form','feedback_versions','feedback_responses')");
+  console.log(`${rows[0].n}/22 RDS tables present`);
   await db.end();
 }
 main().catch(e => { console.error("✗", e.message); process.exit(1); });

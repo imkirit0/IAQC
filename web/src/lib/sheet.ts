@@ -48,6 +48,17 @@ export function parseSheet(data: ArrayBuffer, fileName: string, asos: string[]):
   return Buffer.byteLength(JSON.stringify(parsed)) > REF_MAX_SHEET_BYTES ? { error: "This spreadsheet holds too much data to display. Split it into smaller files." } : parsed;
 }
 
+/** A cell a spreadsheet program would run as a formula when it opens a CSV. Student answers are untrusted, so these are made plain text. */
+export const safeCsvCell = (c: string | number) => (typeof c === "string" && /^[=+\-@\t\r]/.test(c) ? `'${c}` : c);
+
+/** A finished Excel or CSV file from a grid of cells. Excel stores text cells as text, so only CSV needs protecting. */
+export function gridFile(grid: (string | number)[][], format: "xlsx" | "csv"): Buffer {
+  if (format === "csv") return Buffer.from(`\uFEFF${XLSX.utils.sheet_to_csv(XLSX.utils.aoa_to_sheet(grid.map(r => r.map(safeCsvCell))))}`, "utf8"); // the mark tells Excel it is UTF-8
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(grid), "Responses");
+  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+}
+
 /** An .xlsx of just these rows, base64-encoded. */
 export function sheetFile(columns: string[], rows: string[][]): string {
   const wb = XLSX.utils.book_new();

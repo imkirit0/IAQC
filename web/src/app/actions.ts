@@ -4,8 +4,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { audit, canRequest, Forbidden, guard, HOME, isPro, usernameToEmail, type Me } from "@/lib/auth";
 import { authClient, db } from "@/lib/supabase";
-import { acDistricts, actorsOn, getAsos, getRefSheet, getSettings, makeSnapshot, refScope, sameRegion, type DirChange, type SupportRow } from "@/lib/data";
+import { acDistricts, actorsOn, getAsos, getFeedbackForm, getRefSheet, getSettings, hashIp, makeSnapshot, refScope, sameRegion, ticketAge, type DirChange, type SupportRow } from "@/lib/data";
 import { parseSheet, sheetFile } from "@/lib/sheet";
+import { cleanForm, FB_MAX_TOTAL_MB, fbContentType, fbExt, fbSearchText, fileContentMatches, formErrors, validateAnswers, type FbFile } from "@/lib/feedback";
 import { ACTIONS, CATEGORIES, can, CHECK_OUTCOMES, cleanSpecs, DIRECTORY, isRefSheet, nextStatus, refFileError, SR_PRIORITIES, srRef, type ActionName, type DirKind, type Spec } from "@/lib/support";
 import { PRIORITIES, STATUSES, validateResponses, type Priority, type Responses } from "@/lib/scoring";
 
@@ -755,6 +756,129 @@ export async function refFileUrl(versionId: number): Promise<Result> {
     return { ok: true, data: { url: data.signedUrl } };
   } catch (e) {
     return { error: e instanceof Forbidden ? e.message : "The file could not be opened. Please try again." };
+  }
+}
+
+// ---------- student feedback ----------
+
+const FEEDBACK_BUCKET = "feedback";
+
+export async function saveFeedbackDraft(raw: unknown) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    await ok(db().from("feedback_form").update({ draft: cleanForm(raw), updated_at: new Date().toISOString(), updated_by: me.id }).eq("id", 1));
+    await audit(me, "FEEDBACK_DRAFT_SAVED");
+  });
+}
+
+/** Makes the draft what students see, as a new version. Earlier versions stay untouched for the responses that used them. The public link does not change. */
+export async function publishFeedback(raw: unknown) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const form = cleanForm(raw), errs = formErrors(form);
+    check(!errs.length, errs.join(" "));
+    await ok(db().from("feedback_form").update({ draft: form, updated_at: new Date().toISOString(), updated_by: me.id }).eq("id", 1));
+    const cur = await getFeedbackForm();
+    if (JSON.stringify(cur.published) === JSON.stringify(form)) return { ok: true as const, data: { version: cur.version } };
+    const { data: last } = await db().from("feedback_versions").select("version").order("version", { ascending: false }).limit(1).maybeSingle();
+    const version = (last?.version ?? 0) + 1;
+    await ok(db().from("feedback_versions").insert({ version, form, published_by: me.id }));
+    await ok(db().from("feedback_form").update({ version }).eq("id", 1));
+    await audit(me, "FEEDBACK_PUBLISHED", `version ${version}`);
+    return { ok: true as const, data: { version } };
+  });
+}
+
+/** Opens or closes collection. Closing removes nothing. */
+export async function setFeedbackActive(active: boolean) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    if (active) check((await getFeedbackForm()).published, "Publish the form before opening collection.");
+    await ok(db().from("feedback_form").update({ active: !!active }).eq("id", 1));
+    await audit(me, active ? "FEEDBACK_OPENED" : "FEEDBACK_CLOSED");
+  });
+}
+
+export async function verifyFeedback(id: number) {
+  return run(async () => {
+    const me = await guard("iaqc");
+    const done = await ok(db().from("feedback_responses").update({ status: "Verified", verified_at: new Date().toISOString(), verified_by: me.id }).eq("id", id).eq("status", "Pending Verification").select("id"));
+    check(done.length, "This response is already verified.");
+    await audit(me, "FEEDBACK_VERIFIED", `#${id}`);
+  });
+}
+
+/** A one-minute download link for a file a student attached. The path comes only from the stored answer. */
+export async function feedbackFileUrl(id: number, questionId: string): Promise<Result> {
+  try {
+    await guard("iaqc");
+    const { data: r } = await db().from("feedback_responses").select("answers").eq("id", id).maybeSingle();
+    const f = r?.answers?.[questionId] as FbFile | undefined;
+    if (!f?.path) return { error: "This file is no longer available." };
+    const { data, error } = await db().storage.from(FEEDBACK_BUCKET).createSignedUrl(f.path, 60, { download: f.name });
+    if (error || !data) return { error: "The file could not be opened. Please try again." };
+    return { ok: true, data: { url: data.signedUrl } };
+  } catch (e) {
+    return { error: e instanceof Forbidden ? e.message : "The file could not be opened. Please try again." };
+  }
+}
+
+const MIN_FILL_MS = 2000, RATE_WINDOW_MS = 10 * 60 * 1000;
+// ponytail: a whole centre can share one internet address, so the limit is generous; add a CAPTCHA if automated abuse gets past it.
+const RATE_LIMIT = 40;
+
+/** The one action open to anyone: no sign-in, so it trusts nothing that was sent. It returns only success or an error, never stored data.
+ *  Form fields: ticket, version, answers (JSON), website (a trap field people never see), file:<question id>. */
+export async function submitFeedback(fd: FormData): Promise<Result> {
+  const uploaded: string[] = [];
+  try {
+    if (fd.get("website")) return { ok: true }; // a bot filled the trap: pretend it worked and store nothing
+    const ticket = String(fd.get("ticket") ?? "").slice(0, 200), age = ticketAge(ticket);
+    if (age == null) return { error: "Please reload this page and try again." };
+    if (age < MIN_FILL_MS) return { error: "That was very quick. Please check your answers and submit again." };
+
+    const cur = await getFeedbackForm();
+    if (!cur.active || !cur.published) return { error: "Feedback collection is currently closed." };
+    if (Number(fd.get("version")) !== cur.version) return { error: "This form was updated while you had it open. Please reload the page to see the latest version." };
+    const { data: dup } = await db().from("feedback_responses").select("id").eq("ticket", ticket).maybeSingle();
+    if (dup) return { ok: true }; // the same form sent twice: the first one counted
+
+    const ip_hash = hashIp((await headers()).get("x-forwarded-for")?.split(",")[0].trim() || "unknown");
+    const { count } = await db().from("feedback_responses").select("id", { count: "exact", head: true }).eq("ip_hash", ip_hash).gte("submitted_at", new Date(Date.now() - RATE_WINDOW_MS).toISOString());
+    if ((count ?? 0) >= RATE_LIMIT) return { error: "Too many submissions from this network. Please try again in a few minutes." };
+
+    let raw: Record<string, unknown>;
+    try { raw = JSON.parse(String(fd.get("answers") ?? "{}")); } catch { return { error: "Please reload this page and try again." }; }
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "Please reload this page and try again." };
+    const files = new Map<string, File>();
+    for (const q of cur.published.items) {
+      if (q.kind !== "q" || q.type !== "file") continue;
+      const f = fd.get(`file:${q.id}`);
+      delete raw[q.id]; // only a real uploaded file can answer a file question
+      if (f instanceof File && f.size > 0) { files.set(q.id, f); raw[q.id] = { name: f.name, size: f.size }; }
+    }
+    const { errors, answers } = validateAnswers(cur.published, raw);
+    if ([...files.values()].reduce((n, f) => n + f.size, 0) > FB_MAX_TOTAL_MB * 1024 * 1024) return { error: `Attached files must total ${FB_MAX_TOTAL_MB} MB or less.` };
+    for (const [id, f] of files) if (!errors[id] && !fileContentMatches(f.name, new Uint8Array(await f.arrayBuffer()))) errors[id] = "This file's content does not match its type.";
+    if (Object.keys(errors).length) return { error: "Please correct the highlighted questions.", data: { fields: errors } };
+
+    for (const [id, f] of files) {
+      const path = `v${cur.version}/${crypto.randomUUID()}.${fbExt(f.name)}`; // the student's file name is never part of the storage path
+      const up = await db().storage.from(FEEDBACK_BUCKET).upload(path, f, { contentType: fbContentType(f.name) });
+      if (up.error) throw new Error(up.error.message);
+      uploaded.push(path);
+      (answers[id] as FbFile).path = path;
+    }
+    const { error } = await db().from("feedback_responses").insert({ version: cur.version, answers, search_text: fbSearchText(answers), ticket, ip_hash });
+    if (error) {
+      if (uploaded.length) await db().storage.from(FEEDBACK_BUCKET).remove(uploaded);
+      if (/duplicate key/i.test(error.message)) return { ok: true }; // two copies raced: the other one counted
+      throw new Error(error.message);
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { error: "Your feedback could not be sent. Please try again." };
   }
 }
 
