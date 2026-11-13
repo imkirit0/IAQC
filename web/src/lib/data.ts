@@ -5,7 +5,7 @@ import { db } from "./supabase";
 import { inScope, isPro, seesLocation, type Me } from "./auth";
 import { asoKey, DEFAULT_DEPARTMENTS, distanceM, lateness, type Actor, type DirKind, type Spec } from "./support";
 import { cleanForm, type FbForm, type FbRow } from "./feedback";
-import { compute, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
+import { compute, standing, type Category, type Factors, type Priority, type Responses, type Result, type Snapshot, type Thresholds, type Alert } from "./scoring";
 
 export type Settings = { thresholds: Thresholds; factors: Factors; priority_weights: Record<Priority, number>; visit_cycle_days: number; checklist_version: number;
   departments: string[]; asos: string[]; support_verification: boolean; gps_required: boolean; gps_flag_m: number };
@@ -110,13 +110,14 @@ export async function getCentres(opts: { acId?: string; district?: string | null
   return (must(cs) as Centre[]).filter(c => !opts.district || c.district.toLowerCase() === opts.district.toLowerCase()).map(c => ({ ...c, ac_name: c.ac_id ? names.get(c.ac_id) ?? null : null, last_visit: last.get(c.id) ?? null }));
 }
 
-/** Each centre's current status: the category of its latest submitted report, IAQA's risk-level decision included. Centres with no report are absent. */
+/** Each centre's current status: the band of its average score across all visits, IAQA's risk-level decision on the latest report included. Centres with no report are absent. */
 export async function getCentreStatuses(centreIds: number[]): Promise<Record<number, Category>> {
   if (!centreIds.length) return {};
-  const rows = must(await db().from("assessments").select("*").in("centre_id", centreIds).order("visit_date").order("id")) as AssessmentRow[];
-  const latest = [...new Map(rows.map(a => [a.centre_id, a])).values()], names = new Map<string, string>(); // later rows replace earlier ones; names are not shown here
-  const ovr = await overrides(latest.map(a => a.id), names);
-  return Object.fromEntries(latest.map(a => [a.centre_id, summarise(a, names, ovr).category]));
+  const [rows, st] = await Promise.all([db().from("assessments").select("*").in("centre_id", centreIds).order("visit_date").order("id"), getSettings()]);
+  const names = new Map<string, string>(), by = new Map<number, AssessmentRow[]>(); // names are not shown here
+  (must(rows) as AssessmentRow[]).forEach(a => by.set(a.centre_id, [...(by.get(a.centre_id) ?? []), a]));
+  const ovr = await overrides([...by.values()].map(v => v.at(-1)!.id), names);
+  return Object.fromEntries([...by].map(([id, v]) => [id, standing(v.map(a => summarise(a, names, ovr)), st.thresholds).category]));
 }
 
 export type RankRow = Centre & {
@@ -142,7 +143,7 @@ export async function getRanking(from?: string, to?: string, district?: string |
     const alerts = latest.alerts.map(al => ({ ...al, verification: states.get(`${latest.id}:${al.criterion_id}`) ?? PENDING })).filter(al => !CLOSED.has(al.verification));
     const days_since = Math.floor((today - Date.parse(latest.visit_date)) / 864e5);
     return {
-      ...c, assessment_id: latest.id, score: latest.score, risk: latest.risk, category: latest.category, override: latest.override, reported_by: latest.ac_name,
+      ...c, assessment_id: latest.id, ...standing(hs, settings.thresholds), override: latest.override, reported_by: latest.ac_name, // score = average of the visits in range
       alerts, sections: latest.sections, counts: latest.counts, history,
       trend: prev?.score != null && latest.score != null ? Math.round((latest.score - prev.score) * 100) / 100 : null,
       days_since, due: days_since > settings.visit_cycle_days,
@@ -183,7 +184,7 @@ export async function getAssessment(id: number): Promise<AssessmentDetail | null
 export async function getScorecard(centreId: number) {
   const c = must(await db().from("centres").select("*").eq("id", centreId).maybeSingle()) as Centre | null;
   if (!c) return null;
-  const names = await profileNames();
+  const [names, { thresholds }] = await Promise.all([profileNames(), getSettings()]);
   const rows = must(await db().from("assessments").select("*").eq("centre_id", centreId).order("visit_date").order("id")) as AssessmentRow[];
   const [states, ovr] = await Promise.all([alertStates(rows.map(a => a.id)), overrides(rows.map(a => a.id), names)]);
   const history = rows.map(a => summarise(a, names, ovr));
@@ -199,7 +200,7 @@ export async function getScorecard(centreId: number) {
       if (prior && latest.responses[String(cr.id)]?.status === "N") recurring.push({ text: cr.text, section: s.name, first_reported: prior[0], times: prior.length + 1 });
     }));
   }
-  return { centre: { ...c, ac_name: c.ac_id ? names.get(c.ac_id) ?? null : null }, history, unresolved, recurring };
+  return { centre: { ...c, ac_name: c.ac_id ? names.get(c.ac_id) ?? null : null }, history, unresolved, recurring, overall: standing(history, thresholds), thresholds };
 }
 
 export async function getUsers() {

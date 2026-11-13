@@ -1,6 +1,6 @@
 // Offline self-check of the scoring engine safeguards. Run: npm run check
 import assert from "node:assert/strict";
-import { compute, validateResponses, type Snapshot } from "../src/lib/scoring";
+import { compute, standing, validateResponses, type Category, type Snapshot } from "../src/lib/scoring";
 
 const snap: Snapshot = {
   version: 1,
@@ -22,6 +22,10 @@ assert.equal(r.alerts.length, 1, "critical non-compliance raises an alert");
 assert.match(validateResponses(snap, { 1: { status: "N" }, 2: { status: "C" } })[0], /Remark required/);
 assert.match(validateResponses(snap, { 1: { status: "NA" }, 2: { status: "C" } })[0], /Mandatory/);
 assert.equal(validateResponses(snap, { 1: { status: "C" }, 2: { status: "P" } }).length, 0);
+const th = snap.rules.thresholds, v = (score: number | null, category: Category = "Green") => ({ score, category });
+assert.deepEqual(standing([v(90), v(60, "Red"), v(null, "Unscorable")], th), { score: 75, risk: 25, visits: 2, category: "Yellow" }, "a centre scores the mean of its scored visits");
+assert.equal(standing([v(90), { ...v(60, "Red"), override: { category: "Red" } }], th).category, "Red", "IAQA's level on the latest report wins");
+assert.deepEqual(standing([], th), { score: null, risk: null, visits: 0, category: "Not Assessed" });
 console.log("Scoring checks passed.");
 
 // Support-request workflow: role-gated transitions and deadline flags.

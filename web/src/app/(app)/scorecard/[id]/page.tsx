@@ -44,14 +44,14 @@ async function Scorecard({ params, searchParams }: { params: Promise<{ id: strin
         <>
           <Reveal className="card sc-hero" style={{ marginBottom: 22 }}>
             <div className="sc-score">
-              <Gauge score={a.score} thresholds={a.thresholds} />
+              <Gauge score={sc.overall.score} thresholds={sc.thresholds} />
               <div>
-                <div className="small faint">Compliance score</div>
-                <div className="big-score" style={{ margin: "6px 0 12px" }}>{a.score == null ? "—" : <CountUp to={a.score} decimals={2} />}<small>%</small></div>
-                <div className="row" style={{ gap: 10 }}><Badge c={a.category} /><AlertTag n={a.alerts.length} />
+                <div className="small faint">Compliance score · average of {sc.overall.visits} visit{sc.overall.visits === 1 ? "" : "s"}</div>
+                <div className="big-score" style={{ margin: "6px 0 12px" }}>{sc.overall.score == null ? "—" : <CountUp to={sc.overall.score} decimals={2} />}<small>%</small></div>
+                <div className="row" style={{ gap: 10 }}><Badge c={sc.overall.category} /><span className="small muted">Risk <b>{pct(sc.overall.risk)}</b></span></div>
+                <div className="row small muted" style={{ gap: 10, marginTop: 12 }}><span>This visit <b>{pct(a.score)}</b> · {a.earned} of {a.max} applicable points</span><Badge c={a.category} bare /><AlertTag n={a.alerts.length} />
                   {me.role === "iaqc" && <RiskLevelControl assessmentId={a.id} current={a.category} computed={a.computed_category} overridden={!!a.override} />}</div>
                 {a.override && <div className="override-note"><b>Set by IAQA</b> · {a.override.by}, {fmtDate(a.override.at)} · computed level {a.computed_category}<span>{a.override.note}</span></div>}
-                <div className="small muted" style={{ marginTop: 10 }}>Risk <b>{pct(a.risk)}</b> · {a.earned} of {a.max} applicable points</div>
               </div>
             </div>
             <dl className="info-list sc-facts">

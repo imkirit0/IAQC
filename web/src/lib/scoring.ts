@@ -29,6 +29,19 @@ export function category(score: number | null, th: Thresholds): Category {
   return score >= th.green ? "Green" : score >= th.yellow ? "Yellow" : "Red";
 }
 
+/**
+ * A centre's standing across its visits: the mean of every scored visit, banded with the thresholds in force now.
+ * Unscored visits are left out (never counted as zero). IAQA's risk level set on the latest report still decides the band.
+ */
+export function standing(visits: { score: number | null; category: Category; override?: { category: Category } | null }[], th: Thresholds) {
+  const scores = visits.flatMap(v => v.score ?? []), latest = visits.at(-1);
+  const score = scores.length ? r2(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  return {
+    score, risk: score == null ? null : r2(100 - score), visits: scores.length,
+    category: latest?.override?.category ?? (score == null ? latest?.category ?? "Not Assessed" : category(score, th)),
+  };
+}
+
 export const needsRemark = (c: { critical: boolean; priority: Priority }, st?: string | null) =>
   st === "N" || (st === "P" && (c.critical || c.priority === "Critical" || c.priority === "High"));
 
